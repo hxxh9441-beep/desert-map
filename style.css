@@ -611,6 +611,14 @@ body {
   display: flex;
 }
 
+/* ---------- مودال المشاركة ---------- */
+#shareModal {
+  display: none;
+}
+#shareModal.open {
+  display: flex;
+}
+
 .modal-input {
   display: block;
   width: 100%;

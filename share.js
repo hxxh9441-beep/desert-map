@@ -289,6 +289,8 @@ ${pts}
   }
 
   function handleShareHash() {
+    // فقط رابط مسار فعلي (#track=...) يشغّل الاستيراد — لا hash فارغ ولا # عادي
+    if (!window.location.hash || !window.location.hash.startsWith('#track=')) return
     const track = parseShareUrl()
     if (!track) return
 
