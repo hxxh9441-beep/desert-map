@@ -9,16 +9,12 @@
   const map = window.__MAP__
   const TRACKER = window.__TRACKER__
 
-  /* ---------- غلاف دوار حول لوحة الخريطة ----------
-     نلف غلافاً خاصاً (وليس لوحة الخريطة مباشرة) حتى لا يتعارض
-     الدوران مع transform الذي يحدّثه Leaflet عند التمركز/السحب */
+  /* ---------- لوحة الخريطة (نلفّها مباشرة عند الدوران) ----------
+     الحاوية بحجم الشاشة بالضبط (100vw×100vh) ومركزها هو مركز الشاشة،
+     فنلف لوحة الخريطة حول 50vw 50vh ونركّب الدوران مع أي transform
+     يكتبه Leaflet (عبر ترقيع setPosition) — فيبقى مركز الإحداثيات
+     مطابقاً لمركز الشاشة ولا ينفصل محور السحب */
   const mapPane = document.querySelector('.leaflet-map-pane')
-  const wrap = document.createElement('div')
-  wrap.className = 'map-rotate-wrap'
-  if (mapPane && mapPane.parentNode) {
-    mapPane.parentNode.insertBefore(wrap, mapPane)
-    wrap.appendChild(mapPane)
-  }
 
   const compassBtn = document.getElementById('compassBtn')
   const compassNeedle = document.getElementById('compassNeedle')
@@ -35,15 +31,98 @@
     return ((d % 360) + 360) % 360
   }
 
-  /* ---------- تطبيق الدوران (الخريطة + إبرة البوصلة) ---------- */
+  /* ---------- تطبيق الدوران (لوحة الخريطة + إبرة البوصلة) ---------- */
   function applyRotation(deg) {
     currentRotation = deg
-    if (wrap) wrap.style.transform = `rotate(${deg}deg)`
+    if (mapPane) {
+      mapPane.style.setProperty('--map-rotation', `${deg}deg`)
+      composeRotation()
+    }
     if (compassNeedle) compassNeedle.style.transform = `rotate(${deg}deg)`
     // القصور الذاتي يُفعَّل فقط في وضع الشمال (زاوية ≈ 0)
     const r = ((deg % 360) + 360) % 360
     const wantInertia = Math.abs(r) < 0.5
     if (map.options.inertia !== wantInertia) map.options.inertia = wantInertia
+    // عند تجاوز عتبة الدوران: نحمّل هامش البلاطات (مرة واحدة)
+    refreshTileMargin(Math.abs(r) >= 0.5)
+  }
+
+  /* ---------- تركيب الدوران مع transform الحالي للوحة ----------
+     Leaflet يكتب translate3d(...) (وأحياناً scale أثناء زوم) —
+     نزيل أي rotate سابق ونعيد إضافته بعدها (rotate يطبق أولاً ثم
+     scale ثم translate فلا يتعارض مع حساب زوم Leaflet) */
+  function composeRotation() {
+    if (!mapPane) return
+    const r = ((currentRotation % 360) + 360) % 360
+    let t = mapPane.style.transform || ''
+    t = t.replace(/\s*rotate\([^)]*\)/g, '')
+    if (Math.abs(r) >= 0.5) t += ` rotate(${r}deg)`
+    mapPane.style.transform = t
+  }
+
+  /* ---------- ترقيع setPosition: الدوران يبقى بعد كل كتابة ----------
+     كل حركة/زوم/سحب يمر عبر L.DomUtil.setPosition على لوحة الخريطة —
+     نعيد تركيب الدوران فوراً حتى لا يمسحه Leaflet */
+  function patchSetPosition() {
+    const orig = L.DomUtil.setPosition
+    if (L.DomUtil.setPosition.__rotPatched) return
+    L.DomUtil.setPosition.__rotPatched = true
+    L.DomUtil.setPosition = function (el, point, scale) {
+      orig.call(this, el, point, scale)
+      if (el && el.classList && el.classList.contains('leaflet-map-pane')) {
+        composeRotation()
+      }
+    }
+  }
+
+  /* ---------- هامش بلاطات يغطي الدوران ----------
+     keepBuffer في Leaflet لا يُحمّل بلاطات هامشية (يمنع القص فقط)،
+     فتكشف زوايا الشاشة عند 45°/90°. الحل: نوسّع نطاق التحميل ليشمل
+     دائرة نصف قطرها نصف قطر الشاشة — فتغطي أي زاوية دوران */
+  let marginLayers = []
+
+  function patchTileMargin(layer) {
+    const tileLayers = []
+    const walk = (l) => {
+      if (l instanceof L.LayerGroup) l.eachLayer(walk)
+      else if (l instanceof L.GridLayer) tileLayers.push(l)
+    }
+    walk(layer)
+    tileLayers.forEach((tl) => {
+      if (tl.__marginPatched) return
+      tl.__marginPatched = true
+      tl._getTiledPixelBounds = function (center) {
+        // نستدعي طريقة النموذج مباشرة (لا نعتمد على مرجع closure قديم)
+        const b = L.GridLayer.prototype._getTiledPixelBounds.call(this, center)
+        // حماية: نطاقات غير صالحة أو حجم خريطة صفري (أثناء التهيئة)
+        if (!b || !isFinite(b.min.x) || !isFinite(b.max.x)) return b
+        const size = map.getSize()
+        if (!size || size.x <= 0 || size.y <= 0) return b
+        const hw = size.x / 2
+        const hh = size.y / 2
+        const halfDiag = Math.sqrt(hw * hw + hh * hh)
+        // نوسّع النطاق يدوياً ليغطي دائرة نصف قطرها نصف قطر الشاشة
+        // (Bounds.pad في Leaflet يقبل رقماً واحداً فقط — لا Point/مصفوفة)
+        const marginX = halfDiag - hw
+        const marginY = halfDiag - hh
+        return L.bounds(
+          L.point(b.min.x - marginX, b.min.y - marginY),
+          L.point(b.max.x + marginX, b.max.y + marginY)
+        )
+      }
+    })
+    return tileLayers
+  }
+
+  // عند بدء الدوران: نحدّث هامش البلاطات مرة واحدة (redraw)
+  let wasRotated = false
+  function refreshTileMargin(rotated) {
+    if (rotated === wasRotated) return
+    wasRotated = rotated
+    if (!rotated) return
+    Object.values(window.__LAYERS__ || {}).forEach((l) => {
+      if (map.hasLayer(l)) l.redraw()
+    })
   }
 
   /* ---------- مستشعر اتجاه الجهاز ---------- */
@@ -246,8 +325,11 @@
   }
 
   /* ---------- التشغيل ---------- */
+  patchSetPosition()
   patchDragRotation()
-  map.invalidateSize() // تأكد من قياس الحاوية الكبيرة 150vmax
+  // وسّع نطاق تحميل البلاطات لكل الطبقات (يغطي زوايا الدوران)
+  Object.values(window.__LAYERS__ || {}).forEach((l) => patchTileMargin(l))
+  map.invalidateSize()
   syncInertia()
   tick()
 

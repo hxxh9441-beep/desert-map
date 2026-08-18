@@ -8,7 +8,7 @@
   /* ---------- الإحداثيات والضبط ---------- */
   const RIYADH = [24.7136, 46.6753]
   const DEFAULT_ZOOM = 12
-  const MAX_ZOOM = 22 // زوم عميق — البلاطات تتمدد من أعلى مستوى متاح بدل 404
+  const MAX_ZOOM = 21 // زوم عميق — البلاطات تتمدد من أعلى مستوى متاح بدل 404
 
   /* ---------- تهيئة الخريطة ---------- */
   const map = L.map('map', {
@@ -24,15 +24,17 @@
 
   /* ---------- الطبقات الخمس ----------
      maxNativeZoom: حد البلاطات الأصلي — ما بعده تتمدد البلاطات (بدون 404)
-     maxZoom: 22 عبر الجميع */
+     Esri: يتوقف عند 17 (بلاطات مائية 18+ للمنطقة) — يتمدد رقمياً حتى 21
+     maxZoom: 21 عبر الجميع */
   const layers = {
-    // قمر صناعي — Esri World Imagery (ينتهي أصلياً عند 18 → يتمدد لـ 22)
+    // قمر صناعي — Esri World Imagery (يتوقف عند 17 — يتمدد رقمياً حتى 21)
     satellite: L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       {
-        maxNativeZoom: 18,
+        maxNativeZoom: 17,
         maxZoom: MAX_ZOOM,
         keepBuffer: 3, // بلاطات إضافية — يغطي دوران الخريطة
+        detectRetina: false,
         attribution: 'Tiles © Esri — Esri, Maxar, Earthstar Geographics',
       }
     ),
@@ -41,18 +43,20 @@
       L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         {
-          maxNativeZoom: 18,
+          maxNativeZoom: 17,
           maxZoom: MAX_ZOOM,
           keepBuffer: 3,
+          detectRetina: false,
           attribution: 'Tiles © Esri',
         }
       ),
       L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
         {
-          maxNativeZoom: 18,
+          maxNativeZoom: 17,
           maxZoom: MAX_ZOOM,
           keepBuffer: 3,
+          detectRetina: false,
           opacity: 0.95,
           attribution: 'Labels © Esri',
         }

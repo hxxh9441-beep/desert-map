@@ -32,30 +32,22 @@ body {
   font-family: inherit;
 }
 
-/* ---------- حاوية الخريطة: 150vmax مربعة وموسّطة ----------
-   أكبر بكثير من الشاشة (≥ قطر الشاشة) حتى لا تظهر زوايا فارغة
-   عند دوران الخريطة 45°/90° — تُوسّط بهامش سالب (بدون transform)
-   حتى تبقى تحكمات Leaflet قابلة للتثبيت على الشاشة */
+/* ---------- حاوية الخريطة: بحجم الشاشة بالضبط ----------
+   مركز الإحداثيات = مركز الشاشة (50vw 50vh) — لا انفصال بين
+   مركز الخريطة ومركز الرؤية عند الدوران أو السحب */
 .map-canvas {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 150vmax;
-  height: 150vmax;
-  margin-left: -75vmax;
-  margin-top: -75vmax;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
   z-index: 0;
 }
 
-/* ---------- تحكمات Leaflet (تكبير/حقوق): مثبتة على الشاشة ----------
-   الحاوية الآن 150vmax فزواياها خارج الشاشة — نثبّت التحكمات
-   على زوايا الشاشة المرئية بدلاً من زوايا الحاوية */
-.leaflet-control-container .leaflet-top,
-.leaflet-control-container .leaflet-bottom,
-.leaflet-control-container .leaflet-left,
-.leaflet-control-container .leaflet-right {
-  position: fixed !important;
-  z-index: 1000;
+/* ---------- نقطة دوران لوحة الخريطة: مركز الشاشة ----------
+   الدوران يُطبَّق على .leaflet-map-pane مباشرة (تركيبه في compass.js)
+   حول مركز الشاشة — فيبقى محور السحب تحت الإصبع تماماً */
+.leaflet-map-pane {
+  transform-origin: 50vw 50vh !important;
 }
 
 /* ---------- شريط الحقوق (Attribution) — داكن وصغير ---------- */
@@ -1294,16 +1286,6 @@ body {
 /* ═══════════════════════════════════════════════════════════════
    دوران الخريطة + البوصلة · بطاقات HUD · البحث العلوي · شارات POI
    ═══════════════════════════════════════════════════════════════ */
-
-/* ---------- غلاف دوران الخريطة ----------
-   الاستيفاء السلس يتم في compass.js (requestAnimationFrame) —
-   بلا transition حتى لا يتعارض مع التحديثات */
-.map-rotate-wrap {
-  position: absolute;
-  inset: 0;
-  transform-origin: 50% 50%;
-  will-change: transform;
-}
 
 /* ---------- بطاقات HUD (مطابقة لأزرار الأدوات الزجاجية) ---------- */
 .hud-grid {
