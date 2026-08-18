@@ -1,0 +1,774 @@
+/* ═══════════════════════════════════════════════════════════════
+   خارطة البر — التنسيق المخصص
+   ثيم داكن عالي التباين + تحكمات عائمة مخصصة (≥48px للمس)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ---------- خط ثمانية (Thmanyah Serif) — محلي للأوفلاين ---------- */
+@font-face {
+  font-family: 'Thmanyah Serif';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/thmanyah-serif-regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Thmanyah Serif';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('fonts/thmanyah-serif-bold.woff2') format('woff2');
+}
+
+/* ---------- الخط الأساسي ---------- */
+body {
+  font-family: 'Thmanyah Serif', -apple-system, BlinkMacSystemFont,
+    'Noto Sans Arabic', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- الخريطة ---------- */
+.leaflet-container {
+  background: #0d1526; /* خلفية داكنة أثناء تحميل البلاطات */
+  font-family: inherit;
+}
+
+/* ---------- شريط الحقوق (Attribution) — داكن وصغير ---------- */
+.leaflet-control-attribution {
+  background: rgba(10, 15, 26, 0.85) !important;
+  color: #94a3b8 !important;
+  font-size: 10px !important;
+  padding: 2px 8px !important;
+  border-radius: 8px 0 0 0;
+  backdrop-filter: blur(4px);
+}
+.leaflet-control-attribution a {
+  color: #7dd3fc !important;
+}
+
+/* ---------- تحكم التكبير (أسفل اليسار، داكن) ---------- */
+.leaflet-bottom.leaflet-left {
+  margin: 0 0 13.5rem 0.75rem; /* يبتعد عن الأزرار العائمة الثلاثة */
+}
+.leaflet-control-zoom {
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 14px !important;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+}
+.leaflet-control-zoom a {
+  width: 44px !important;
+  height: 44px !important;
+  line-height: 44px !important;
+  background: #0d1526 !important;
+  color: #e2e8f0 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  font-size: 20px !important;
+}
+.leaflet-control-zoom a:hover {
+  background: #16223a !important;
+  color: #fff !important;
+}
+
+/* ---------- الأزرار العائمة (FABs) ---------- */
+.fab {
+  width: 56px;
+  height: 56px; /* ≥48px متطلب اللمس */
+  min-width: 48px;
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(13, 21, 38, 0.9);
+  color: #e2e8f0;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+.fab:active {
+  transform: scale(0.92);
+}
+.fab:hover {
+  background: rgba(22, 34, 58, 0.95);
+  border-color: rgba(125, 211, 252, 0.4);
+}
+.fab:focus-visible {
+  outline: 2px solid #7dd3fc;
+  outline-offset: 2px;
+}
+.fab[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.fab[aria-expanded='true'] {
+  background: linear-gradient(135deg, #0891b2, #6d28d9);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* ---------- لوحة الطبقات ---------- */
+.layer-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px; /* ≥48px متطلب اللمس */
+  padding: 8px 12px;
+  margin-bottom: 2px;
+  border-radius: 14px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+}
+.layer-option:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.layer-option:has(input:checked) {
+  background: rgba(8, 145, 178, 0.15);
+  border-color: rgba(34, 211, 238, 0.35);
+}
+.layer-option:focus-within {
+  outline: 2px solid #7dd3fc;
+  outline-offset: -2px;
+}
+.option-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.option-check {
+  display: none;
+  color: #22d3ee;
+  font-size: 16px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+.layer-option:has(input:checked) .option-check {
+  display: block;
+}
+
+/* ---------- انتقال اللوحة ---------- */
+#layerPanel {
+  display: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+#layerPanel.open {
+  display: block;
+  opacity: 1;
+  transform: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   المرحلة 2 — شريط HUD وزر التسجيل
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ---------- شريط HUD ---------- */
+.hud-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 2px 6px;
+  min-width: 0;
+}
+.hud-value {
+  font-size: 17px;
+  font-weight: 800;
+  color: #f8fafc;
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.hud-speed {
+  font-size: 24px;
+  color: #00e5ff;
+  text-shadow: 0 0 14px rgba(0, 229, 255, 0.5);
+}
+.hud-duration {
+  font-size: 15px;
+  color: #a5b4fc;
+}
+.hud-label {
+  font-size: 10px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+/* ---------- زر التسجيل المركزي ---------- */
+.record-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px; /* ≥48px متطلب اللمس */
+  padding: 0 26px;
+  border-radius: 9999px;
+  border: 1px solid rgba(34, 197, 94, 0.55);
+  background: rgba(8, 18, 28, 0.92);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow:
+    0 0 20px rgba(34, 197, 94, 0.25),
+    0 10px 28px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  transition:
+    transform 0.15s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+.record-btn:active {
+  transform: scale(0.95);
+}
+.record-btn:focus-visible {
+  outline: 2px solid #7dd3fc;
+  outline-offset: 3px;
+}
+
+/* حالة التسجيل — أحمر نيون نابض */
+.record-btn.recording {
+  border-color: rgba(239, 68, 68, 0.7);
+  background: rgba(30, 8, 12, 0.92);
+  box-shadow:
+    0 0 26px rgba(239, 68, 68, 0.4),
+    0 10px 28px rgba(0, 0, 0, 0.5);
+}
+
+/* مؤشر الحالة: أخضر = جاهز · أحمر نابض = يسجل */
+.record-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 10px #22c55e;
+  flex-shrink: 0;
+}
+.record-btn.recording .record-dot {
+  background: #ef4444;
+  box-shadow: 0 0 12px #ef4444;
+  animation: record-pulse 1s ease-in-out infinite;
+}
+@keyframes record-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.6;
+  }
+}
+
+/* ---------- رسالة خطأ GPS ---------- */
+#gpsError:not(.hidden) {
+  display: flex;
+}
+
+/* ---------- بانر المسار المستورد ---------- */
+#importBanner:not(.hidden) {
+  display: flex;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   المرحلة 5 — مؤشر الموقع الحي · زر GPX
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ---------- مؤشر الموقع الحي ---------- */
+.loc-marker-wrap {
+  background: none !important;
+  border: none !important;
+}
+.loc-marker {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+.loc-arrow {
+  display: none;
+  transition: transform 0.3s ease;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.55));
+}
+.loc-marker.has-heading .loc-arrow {
+  display: block;
+}
+.loc-marker.has-heading .loc-ping {
+  display: none;
+}
+
+/* النبض عند غياب الاتجاه (heading) */
+.loc-ping {
+  position: absolute;
+  inset: 0;
+  display: block;
+  border-radius: 50%;
+  border: 2px solid #00e5ff;
+  animation: loc-ping 1.6s ease-out infinite;
+}
+@keyframes loc-ping {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+/* ---------- زر استيراد GPX ---------- */
+.gpx-btn {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  background: rgba(8, 145, 178, 0.15);
+  color: #67e8f9;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.gpx-btn:active {
+  transform: scale(0.94);
+}
+.gpx-btn:hover {
+  background: rgba(8, 145, 178, 0.28);
+}
+.gpx-btn:focus-visible {
+  outline: 2px solid #7dd3fc;
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   المرحلة 6 — شريط الهدف · البحث · POIs
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ---------- شريط الهدف ---------- */
+#targetHud {
+  display: none;
+}
+#targetHud.open {
+  display: flex;
+}
+
+/* ---------- شريط البحث عن إحداثيات ---------- */
+.coord-btn {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px; /* ≥48px متطلب اللمس */
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    transform 0.12s ease,
+    background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.coord-btn:active {
+  transform: scale(0.92);
+}
+.coord-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.coord-btn:focus-visible {
+  outline: 2px solid #7dd3fc;
+  outline-offset: 2px;
+}
+
+/* ---------- مؤشر الهدف والموقع المؤقت ---------- */
+.target-marker {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  font-size: 22px;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.6));
+  animation: target-bob 1.4s ease-in-out infinite;
+}
+@keyframes target-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+.temp-marker {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #22d3ee;
+  border: 3px solid #0d1526;
+  box-shadow: 0 0 0 2px #22d3ee;
+  animation: loc-ping 1.6s ease-out infinite;
+}
+
+/* ---------- مودال إضافة نقطة ---------- */
+#poiModal {
+  display: none;
+}
+#poiModal.open {
+  display: flex;
+}
+
+.poi-type {
+  min-height: 52px; /* ≥48px متطلب اللمس */
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #cbd5e1;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.poi-type:active {
+  transform: scale(0.96);
+}
+.poi-type.selected {
+  background: rgba(34, 211, 238, 0.14);
+  border-color: rgba(34, 211, 238, 0.45);
+  color: #ffffff;
+}
+.poi-type:focus-visible {
+  outline: 2px solid #7dd3fc;
+  outline-offset: 2px;
+}
+
+/* ---------- علامات POI على الخريطة ---------- */
+.poi-marker-wrap {
+  background: none !important;
+  border: none !important;
+}
+.poi-marker {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--poi-color);
+  font-size: 16px;
+  border: 2px solid #0d1526;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- النوافذ المنبثقة للنقاط ---------- */
+.poi-popup {
+  direction: rtl;
+  text-align: right;
+  min-width: 180px;
+  font-family: inherit;
+}
+.poi-popup-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 2px;
+}
+.poi-popup-meta {
+  font-size: 11px;
+  color: #475569;
+  margin-bottom: 4px;
+  direction: ltr;
+  text-align: right;
+}
+.poi-popup-note {
+  font-size: 12px;
+  color: #334155;
+  margin-bottom: 6px;
+}
+.poi-popup-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.poi-popup-btn {
+  flex: 1;
+  min-height: 40px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+.poi-popup-btn:hover {
+  filter: brightness(1.1);
+}
+.poi-popup-btn.poi-popup-del {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  flex: 0 0 auto;
+  min-width: 72px;
+}
+.leaflet-popup-content-wrapper {
+  border-radius: 16px;
+  background: #f8fafc;
+}
+.leaflet-popup-tip {
+  background: #f8fafc;
+}
+
+/* ---------- مفتاح طبقة النقاط ---------- */
+.poi-layer-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 6px 12px;
+  margin-top: 4px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.poi-layer-toggle:focus-within {
+  outline: 2px solid #7dd3fc;
+  outline-offset: -2px;
+}
+.poi-layer-toggle .switch {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.15);
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+.poi-layer-toggle .switch .track {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #94a3b8;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+.poi-layer-toggle input:checked + .switch {
+  background: rgba(34, 211, 238, 0.4);
+}
+.poi-layer-toggle input:checked + .switch .track {
+  transform: translateX(-18px);
+  background: #22d3ee;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   المرحلة 3 — مودال الحفظ · لوحة المسارات · التوست
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ---------- مودال الحفظ ---------- */
+#saveModal {
+  display: none;
+}
+#saveModal.open {
+  display: flex;
+}
+
+.modal-input {
+  display: block;
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f8fafc;
+  font-size: 14px;
+  padding: 10px 14px;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+.modal-input::placeholder {
+  color: #64748b;
+}
+.modal-input:focus {
+  border-color: rgba(34, 211, 238, 0.6);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* ---------- أزرار المودال ---------- */
+.btn-primary {
+  min-height: 48px;
+  flex: 1;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, #06b6d4, #6d28d9);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(6, 182, 212, 0.25);
+  transition:
+    transform 0.12s ease,
+    filter 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.btn-primary:active {
+  transform: scale(0.96);
+}
+.btn-primary:hover {
+  filter: brightness(1.1);
+}
+.btn-primary:focus-visible {
+  outline: 2px solid #7dd3fc;
+  outline-offset: 2px;
+}
+
+.btn-ghost {
+  min-height: 48px;
+  min-width: 96px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+  color: #cbd5e1;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.btn-ghost:active {
+  transform: scale(0.96);
+}
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.btn-ghost:focus-visible {
+  outline: 2px solid #7dd3fc;
+  outline-offset: 2px;
+}
+
+/* ---------- لوحة المسارات المحفوظة ---------- */
+#tracksPanel {
+  display: none;
+}
+#tracksPanel.open {
+  display: flex;
+}
+
+.track-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 60px; /* ≥48px متطلب اللمس */
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+.track-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.track-item:focus-within {
+  outline: 2px solid #7dd3fc;
+  outline-offset: -2px;
+}
+
+.track-action {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px; /* ≥48px متطلب اللمس */
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 17px;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.track-action:active {
+  transform: scale(0.9);
+}
+.track-action:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.track-action[data-act='del']:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* ---------- التوست ---------- */
+.toast {
+  position: absolute;
+  left: 50%;
+  bottom: max(7rem, calc(env(safe-area-inset-bottom) + 6rem));
+  transform: translateX(-50%) translateY(12px);
+  z-index: 3000;
+  max-width: 90vw;
+  padding: 12px 22px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(13, 21, 38, 0.95);
+  color: #f1f5f9;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
