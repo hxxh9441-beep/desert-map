@@ -35,7 +35,7 @@
     <!-- ═══════════ حاوية الخريطة (ملء الشاشة) ═══════════ -->
     <div id="map" class="absolute inset-0 z-0"></div>
 
-    <!-- ═══════════ الترويسة المصغرة (شعار فقط) ═══════════ -->
+    <!-- ═══════════ الترويسة المصغرة (شعار + زر بحث) ═══════════ -->
     <header
       class="pointer-events-none absolute inset-x-0 top-0 z-[1000] flex items-start justify-between logo-top px-3"
     >
@@ -45,6 +45,16 @@
       >
         🧭
       </div>
+      <!-- زر البحث — في الترويسة (يمين الأعلى تحت الشعار/HUD) -->
+      <button
+        id="searchToggleBtn"
+        class="pointer-events-auto search-fab header-search"
+        type="button"
+        aria-label="بحث عن مكان أو إحداثيات"
+        title="بحث عن مكان أو إحداثيات"
+      >
+        🔍
+      </button>
     </header>
 
     <!-- ═══════════ شريط HUD: السرعة · المسافة · المدة ═══════════ -->
@@ -79,41 +89,36 @@
       ></p>
     </div>
 
-    <!-- ═══════════ شريط الهدف (التوجه المباشر) ═══════════ -->
+    <!-- ═══════════ شريط الهدف (وضع الملاحة البرية) ═══════════ -->
     <div
       id="targetHud"
       class="absolute inset-x-0 top-[9.5rem] z-[1500] hidden justify-center px-4"
     >
-      <div
-        class="flex w-full max-w-sm items-center gap-3 rounded-2xl border border-amber-400/40 bg-[#1a1505]/95 px-4 py-2.5 shadow-2xl shadow-black/50 backdrop-blur-md"
-      >
-        <span class="text-xl">🎯</span>
+      <div class="nav-hud">
+        <span class="nav-hud-icon" aria-hidden="true">🧭</span>
         <div class="min-w-0 flex-1">
-          <p id="targetName" class="truncate text-sm font-bold text-amber-200"></p>
-          <p class="flex items-center gap-2 text-[11px] text-slate-300">
-            <span id="targetDist" class="font-extrabold text-amber-300"></span>
-            <span id="targetBearing" class="rounded bg-amber-400/15 px-1.5 py-0.5 font-bold text-amber-200"></span>
+          <p id="targetName" class="nav-hud-name"></p>
+          <p class="nav-hud-meta">
+            <span id="targetDist" class="nav-hud-dist"></span>
+            <span id="targetBearing" class="nav-hud-brg"></span>
           </p>
         </div>
-        <button id="clearTargetBtn" class="track-action" type="button" aria-label="إلغاء الهدف">✖️</button>
+        <button
+          id="clearTargetBtn"
+          class="nav-hud-x"
+          type="button"
+          aria-label="إنهاء الملاحة"
+          title="إنهاء الملاحة"
+        >
+          ✕
+        </button>
       </div>
     </div>
 
-    <!-- ═══════════ البحث: إحداثيات أو أسماء أماكن (قابل للطي) ═══════════ -->
+    <!-- ═══════════ البحث: إحداثيات أو أسماء أماكن (قابل للطي — أسفل الترويسة) ═══════════ -->
     <div
-      class="search-dock absolute inset-x-0 z-[1500] flex flex-col items-center px-4"
+      class="search-dock search-dock-top absolute inset-x-0 z-[1500] flex flex-col items-center px-4"
     >
-      <!-- زر البحث المغلق (دائرة) -->
-      <button
-        id="searchToggleBtn"
-        class="search-fab"
-        type="button"
-        aria-label="بحث عن مكان أو إحداثيات"
-        title="بحث عن مكان أو إحداثيات"
-      >
-        🔍
-      </button>
-
       <!-- الشريط الموسّع -->
       <div
         id="searchWrap"

@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
-   خارطة البر — نظام نقاط الاهتمام POIs (المرحلة 6)
-   مخصصة (ضغطة طويلة + wild_pois) · جاهزة (pois_data.json) · طبقة قابلة للتبديل
+   خارطة البر — نظام نقاط الاهتمام + دبابيس الطرق (المرحلة 6 + الدبوس)
+   ضغطة طويلة / زر أيمن = دبوس مؤقت (كهرماني) + بطاقة إجراءات:
+   توجّه إلى هنا · حفظ النقطة (مودال POI → wild_pois) · مشاركة
+   + نقاط جاهزة (pois_data.json) + طبقة قابلة للتبديل
    ═══════════════════════════════════════════════════════════════ */
 (() => {
   'use strict'
@@ -38,6 +40,106 @@
   let preloadedGroup = null // L.LayerGroup للنقاط الجاهزة
   let poiPickLatLng = null // مكان الضغطة الطويلة
   let selectedType = 'landmark'
+
+  /* ---------- الدبوس المؤقت (Pin Drop) ---------- */
+  let pinMarker = null
+  let pinLatLng = null
+
+  const PIN_ICON = L.divIcon({
+    className: 'poi-marker-wrap',
+    html: `
+      <div class="pin-drop">
+        <svg viewBox="0 0 40 48" width="40" height="48" aria-hidden="true">
+          <path d="M20 1 C10.5 1 3 8.5 3 18 C3 30.5 20 47 20 47 C20 47 37 30.5 37 18 C37 8.5 29.5 1 20 1 Z"
+            fill="#F59E0B" stroke="#ffffff" stroke-width="2"/>
+          <circle cx="20" cy="18" r="7.5" fill="#ffffff"/>
+        </svg>
+      </div>`,
+    iconSize: [40, 48],
+    iconAnchor: [20, 44], // سن الدبوس عند نقطة اللمس
+    popupAnchor: [0, -40],
+  })
+
+  // إسقاط دبوس مؤقت عند موقع ما + فتح بطاقته
+  function dropPin(latlng) {
+    if (pinMarker) map.removeLayer(pinMarker)
+    pinLatLng = latlng
+    pinMarker = L.marker([latlng.lat, latlng.lng], { icon: PIN_ICON, zIndexOffset: 950 }).addTo(map)
+    openPinCard(latlng)
+  }
+
+  function removePin() {
+    if (pinMarker) {
+      map.removeLayer(pinMarker)
+      pinMarker = null
+    }
+    pinLatLng = null
+  }
+
+  // بطاقة الدبوس: الإحداثيات DMS + DD وثلاثة إجراءات
+  function openPinCard(latlng) {
+    const lat = latlng.lat
+    const lng = latlng.lng
+    const popup = L.popup({ closeButton: true, offset: [0, -8], className: 'pin-popup-shell' })
+      .setLatLng([lat, lng])
+      .setContent(`
+        <div class="pin-popup">
+          <div class="pin-popup-head">
+            <p class="pin-popup-title">📍 نقطة مخصصة</p>
+            <button class="pin-popup-x" data-pin-del type="button" aria-label="إزالة الدبوس">✕</button>
+          </div>
+          <p class="pin-popup-coord">${Utils.toDMS(lat, lng)}</p>
+          <p class="pin-popup-coord pin-popup-dd">${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
+          <div class="pin-popup-actions">
+            <button class="pin-popup-btn pin-popup-nav" data-pin-nav type="button">🧭 توجّه إلى هنا</button>
+            <button class="pin-popup-btn pin-popup-save" data-pin-save type="button">💾 حفظ النقطة</button>
+            <button class="pin-popup-btn pin-popup-share" data-pin-share type="button">📤 مشاركة</button>
+          </div>
+        </div>`)
+      .openOn(map)
+  }
+
+  // مشاركة إحداثيات الدبوس (DMS + DD + رابط التطبيق)
+  async function sharePin(latlng) {
+    const lat = latlng.lat
+    const lng = latlng.lng
+    const appUrl = `${location.origin}${location.pathname}#loc=${lat.toFixed(6)};${lng.toFixed(6)}`
+    const text = `📍 نقطة مخصصة (خارطة البر)
+DMS: ${Utils.toDMS(lat, lng)}
+DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
+رابط التطبيق: ${appUrl}`
+    const ok = window.Share ? await window.Share.copyText(text) : false
+    map.closePopup()
+    showToast(ok ? '📋 تم نسخ الإحداثيات والرابط' : '⚠️ تعذر النسخ')
+  }
+
+  /* ---------- تفويض أزرار بطاقة الدبوس ---------- */
+  document.addEventListener('click', (e) => {
+    const navBtn = e.target.closest('[data-pin-nav]')
+    if (navBtn) {
+      map.closePopup()
+      if (pinLatLng && window.__NAV__) {
+        window.__NAV__.navigateTo('نقطة مخصصة', pinLatLng.lat, pinLatLng.lng)
+      }
+      return
+    }
+    const saveBtn = e.target.closest('[data-pin-save]')
+    if (saveBtn) {
+      map.closePopup()
+      if (pinLatLng) openPoiPicker(pinLatLng)
+      return
+    }
+    const shareBtn = e.target.closest('[data-pin-share]')
+    if (shareBtn) {
+      if (pinLatLng) sharePin(pinLatLng)
+      return
+    }
+    const delBtn = e.target.closest('[data-pin-del]')
+    if (delBtn) {
+      map.closePopup()
+      removePin()
+    }
+  })
 
   /* ---------- الأيقونات ---------- */
   function poiIcon(icon, color) {
@@ -180,7 +282,7 @@
     if (e.key === 'Escape') closePoiPicker()
   })
 
-  /* ---------- الضغطة الطويلة / الزر الأيمن ---------- */
+  /* ---------- الضغطة الطويلة / الزر الأيمن → دبوس مؤقت ---------- */
   let pressTimer = null
   let pressLatLng = null
 
@@ -197,7 +299,7 @@
     clearPress()
     pressLatLng = e.latlng
     pressTimer = setTimeout(() => {
-      openPoiPicker(pressLatLng)
+      dropPin(pressLatLng)
       clearPress()
     }, 600)
   })
@@ -206,7 +308,7 @@
   map.on('contextmenu', (e) => {
     if (e.target !== map) return
     e.originalEvent.preventDefault()
-    openPoiPicker(e.latlng)
+    dropPin(e.latlng)
   })
 
   /* ---------- حذف نقطة مخصصة من النافذة المنبثقة ---------- */
@@ -242,6 +344,8 @@
     togglePois,
     openPoiPicker,
     savePoi,
+    dropPin,
+    removePin,
     POI_TYPES,
   }
 })()

@@ -1,12 +1,14 @@
 /* ═══════════════════════════════════════════════════════════════
-   خارطة البر — محرك التتبع والتسجيل الحي (المرحلة 2)
-   watchPosition + فلتر ضوضاء (10م) + خط حي + HUD
+   خارطة البر — محرك التتبع والتسجيل الحي (المرحلة 2 + بَك Google Maps)
+   مراقبة مستمرة (watchPosition دائم) · بَك: نقطة زرقاء ساكنة أو سهم
+   مخروطي ثلاثي الأبعاد يدور مع الاتجاه · دائرة دقة شفافة · تسجيل مسار + HUD
    ═══════════════════════════════════════════════════════════════ */
 (() => {
   'use strict'
 
   const MIN_DISTANCE_M = 10 // فلتر الضوضاء: نهمل أي إحداثي أقرب من 10م
-  const MAX_ACCURACY_M = 25 // حماية الدقة: نهمل أي إشارة أدق من 25م
+  const MAX_ACCURACY_M = 25 // حماية الدقة: لا نسجل إشارة أدق من 25م
+  const MOVING_SPEED_KMH = 1 // فوقها + heading صالح = وضع السهم المتحرك
   const map = window.__MAP__
 
   /* ---------- عناصر الواجهة ---------- */
@@ -25,20 +27,34 @@
   const saveTrackBtn = document.getElementById('saveTrackBtn')
   const discardTrackBtn = document.getElementById('discardTrackBtn')
 
-  /* ---------- مؤشر الموقع الحي ---------- */
+  /* ---------- مؤشر الموقع الحي (بَك Google Maps) ----------
+     ساكن (سرعة < 1 كم/س أو بلا heading): نقطة زرقاء نابضة + حلقة دقة
+     متحرك (سرعة ≥ 1 كم/س + heading صالح): سهم مخروطي 3D يدور بسلاسة */
   let locationMarker = null
   const LOC_ICON = L.divIcon({
     className: 'loc-marker-wrap',
     html: `
-      <div class="loc-marker">
-        <svg class="loc-arrow" viewBox="0 0 40 40" width="40" height="40">
-          <circle cx="20" cy="20" r="17" fill="rgba(0,229,255,0.12)" stroke="#00E5FF" stroke-width="2"/>
-          <path d="M20 5 L27 25 L20 20.5 L13 25 Z" fill="#00E5FF" stroke="#062a33" stroke-width="1"/>
-        </svg>
-        <span class="loc-ping" aria-hidden="true"></span>
+      <div class="loc-puck">
+        <div class="puck-dot">
+          <span class="puck-core"></span>
+          <span class="puck-ping"></span>
+        </div>
+        <div class="puck-cone">
+          <svg viewBox="0 0 44 48" width="44" height="48" aria-hidden="true">
+            <defs>
+              <linearGradient id="puck-cone-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#38bdf8"/>
+                <stop offset="100%" stop-color="#0369a1"/>
+              </linearGradient>
+            </defs>
+            <path d="M22 2 C30 14 38 23 38 31 C38 40.4 30.8 46 22 46 C13.2 46 6 40.4 6 31 C6 23 14 14 22 2 Z"
+              fill="url(#puck-cone-grad)" stroke="#e0f2fe" stroke-width="1.8"/>
+            <path d="M22 11 L29 31 L22 26.5 L15 31 Z" fill="#ffffff" opacity="0.95"/>
+          </svg>
+        </div>
       </div>`,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
+    iconSize: [44, 48],
+    iconAnchor: [22, 6], // رأس السهم عند نقطة الموقع
   })
 
   /* ---------- إبقاء الشاشة مضيئة (Wake Lock) ---------- */
@@ -83,7 +99,7 @@
     startTime: 0,
     lastFixTime: 0,
     error: null,
-    lastKnown: null, // آخر موقع معروف {lat,lng,heading,ts} — لإعادة التمركز
+    lastKnown: null, // آخر موقع معروف {lat,lng,heading,speedKmh,accuracy,ts}
   }
 
   /* ---------- الخط الحي ---------- */
@@ -108,18 +124,18 @@
     }
   }
 
-  /* ---------- مؤشر الموقع الحي ---------- */
-  let accuracyCircle = null // دائرة دقة GPS
+  /* ---------- دائرة دقة GPS (زرقاء شفافة ناعمة) ---------- */
+  let accuracyCircle = null
 
   function updateAccuracyCircle(lat, lng, accuracy) {
     const r = Math.max(accuracy || 25, 10)
     if (!accuracyCircle) {
       accuracyCircle = L.circle([lat, lng], {
         radius: r,
-        color: '#22d3ee',
-        weight: 1,
-        fillColor: '#22d3ee',
-        fillOpacity: 0.08,
+        color: 'rgba(56,189,248,0.5)',
+        weight: 1.5,
+        fillColor: '#38bdf8',
+        fillOpacity: 0.1,
         interactive: false,
       }).addTo(map)
     } else {
@@ -128,9 +144,10 @@
     }
   }
 
+  /* ---------- البَك: نقطة ساكنة أو سهم متحرك ---------- */
   function updateLocationMarker() {
     if (!state.lastKnown) return
-    const { lat, lng, heading } = state.lastKnown
+    const { lat, lng, heading, speedKmh } = state.lastKnown
     if (!locationMarker) {
       locationMarker = L.marker([lat, lng], { icon: LOC_ICON, zIndexOffset: 1000 }).addTo(map)
     } else {
@@ -138,11 +155,13 @@
     }
     const el = locationMarker.getElement()
     if (!el) return
-    const hasHeading = typeof heading === 'number' && isFinite(heading)
-    el.classList.toggle('has-heading', hasHeading)
-    if (hasHeading) {
-      const arrow = el.querySelector('.loc-arrow')
-      if (arrow) arrow.style.transform = `rotate(${heading}deg)`
+    // متحرك = سرعة كافية + اتجاه صالح
+    const moving = (speedKmh || 0) >= MOVING_SPEED_KMH && typeof heading === 'number' && isFinite(heading)
+    const puck = el.querySelector('.loc-puck')
+    if (puck) puck.classList.toggle('moving', moving)
+    if (moving) {
+      const cone = el.querySelector('.puck-cone')
+      if (cone) cone.style.transform = `rotate(${heading}deg)`
     }
   }
 
@@ -158,21 +177,32 @@
     const { latitude, longitude, speed, heading, accuracy, timestamp } = pos.coords
     const point = [latitude, longitude]
     const now = timestamp || Date.now()
+    const speedKmh =
+      typeof speed === 'number' && speed >= 0 && isFinite(speed) ? speed * 3.6 : null
 
-    // حماية الدقة: نهمل التحديث بالكامل إذا كانت الدقة أسوأ من 25م
-    if (typeof accuracy === 'number' && accuracy > MAX_ACCURACY_M) return
-
-    // آخر موقع معروف (للمؤشر الحي وإعادة التمركز)
+    // آخر موقع معروف — يحدّث البَك دائماً (سجّل أو لا)
     state.lastKnown = {
       lat: latitude,
       lng: longitude,
       heading: typeof heading === 'number' && isFinite(heading) ? heading : null,
+      speedKmh,
+      accuracy: typeof accuracy === 'number' ? accuracy : 25,
       ts: now,
     }
     updateLocationMarker()
-    if (typeof accuracy === 'number') updateAccuracyCircle(latitude, longitude, accuracy)
+    updateAccuracyCircle(latitude, longitude, state.lastKnown.accuracy)
 
-    // أول إحداثي: نقبله دائماً ونتمركز عليه
+    // خارج التسجيل: نكتفي بتحديث البَك والدائرة — لا نبني مساراً
+    if (!state.recording) {
+      state.error = null
+      renderHud()
+      return
+    }
+
+    // حماية الدقة: لا نسجل إشارة أدق من 25م
+    if (state.lastKnown.accuracy > MAX_ACCURACY_M) return
+
+    // أول إحداثي بعد بدء التسجيل: نقبله دائماً ونتمركز عليه
     if (state.points.length === 0) {
       state.points.push(point)
       state.lastFixTime = now
@@ -187,8 +217,8 @@
     const dt = (now - state.lastFixTime) / 1000
 
     // السرعة: قيمة GPS إن وُجدت، وإلا نحسبها من المسافة/الزمن
-    if (typeof speed === 'number' && speed >= 0 && isFinite(speed)) {
-      state.speed = speed * 3.6 // م/ث → كم/س
+    if (speedKmh !== null) {
+      state.speed = speedKmh
     } else if (dt > 0 && moved >= 0) {
       state.speed = (moved / dt) * 3.6
     }
@@ -219,7 +249,8 @@
     hudDistance.textContent = (state.distance / 1000).toFixed(2)
     hudDuration.textContent = Utils.formatDuration(state.elapsed)
 
-    if (state.error) {
+    // نعرض خطأ GPS فقط أثناء التسجيل — لا نزعج المستخدم أثناء التصفح
+    if (state.error && state.recording) {
       gpsError.textContent = `⚠️ ${state.error}`
       gpsError.classList.remove('hidden')
     } else {
@@ -234,7 +265,7 @@
 
   /* ---------- التشغيل/الإيقاف ---------- */
   function start() {
-    // جلسة جديدة
+    // جلسة جديدة (البَك والمراقبة مستمران ولا يُمسان)
     state.points = []
     state.distance = 0
     state.speed = 0
@@ -242,19 +273,12 @@
     state.error = null
     state.startTime = Date.now()
     state.lastFixTime = 0
-    state.lastKnown = null
     clearPolyline()
-    removeLocationMarker()
     closeSaveModal()
     gpsError.classList.add('hidden')
     renderHud()
 
     state.recording = true
-    state.watchId = navigator.geolocation.watchPosition(onPosition, onError, {
-      enableHighAccuracy: true,
-      maximumAge: 0,
-      timeout: 10000,
-    })
     state.timerInterval = setInterval(() => {
       state.elapsed = (Date.now() - state.startTime) / 1000
       renderHud()
@@ -268,10 +292,6 @@
 
   function stop() {
     state.recording = false
-    if (state.watchId !== null) {
-      navigator.geolocation.clearWatch(state.watchId)
-      state.watchId = null
-    }
     if (state.timerInterval) {
       clearInterval(state.timerInterval)
       state.timerInterval = null
@@ -378,14 +398,21 @@
   })
 
   /* ---------- موقع من افتتاح التطبيق أو زر 🎯 (map.locate) ----------
-     app.js يستدعي map.locate ويرسل desert:located — نرسم هنا الماركر
+     app.js يستدعي map.locate ويرسل desert:located — نرسم هنا البَك
      حتى بدون تسجيل: نقطة نيون نابضة + دائرة دقة */
   window.addEventListener('desert:located', (e) => {
     const d = e.detail || {}
     if (!isFinite(d.lat) || !isFinite(d.lng)) return
-    state.lastKnown = { lat: d.lat, lng: d.lng, heading: null, ts: Date.now() }
+    state.lastKnown = {
+      lat: d.lat,
+      lng: d.lng,
+      heading: null,
+      speedKmh: 0,
+      accuracy: d.accuracy || 25,
+      ts: Date.now(),
+    }
     updateLocationMarker()
-    updateAccuracyCircle(d.lat, d.lng, d.accuracy)
+    updateAccuracyCircle(d.lat, d.lng, state.lastKnown.accuracy)
   })
 
   /* ---------- زر إعادة التمركز (🎯) — map.locate مع تمركز وتكبير ---------- */
@@ -400,14 +427,36 @@
       map.setView([state.lastKnown.lat, state.lastKnown.lng], Math.max(map.getZoom(), 16))
     }
 
-    // locate مع setView + maxZoom 16 — يحدّث الماركر والدائرة عبر desert:located
+    // locate مع setView + maxZoom 16 — يحدّث البَك والدائرة عبر desert:located
     map.locate({ setView: true, maxZoom: 16, enableHighAccuracy: true, timeout: 10000 })
-    setTimeout(() => {
-      locateBtn.disabled = false
-    }, 12000)
   })
 
+  /* ---------- المراقبة المستمرة (تبدأ مع التطبيق — البَك حي دائماً) ----------
+     map.locate (مرة واحدة عند الافتتاح) يعطي التمركز الأول،
+     و watchPosition الدائم يبقي الموقع يُحدَّث في الخلفية لحظياً */
+  if (navigator.geolocation) {
+    state.watchId = navigator.geolocation.watchPosition(onPosition, onError, {
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 10000,
+    })
+  }
+
   /* ---------- كشف للاختبار والمراحل القادمة ---------- */
+  // محاكاة إشارة GPS (للاختبار): السرعة بالكيلومتر/س
+  function simulateFix({ lat, lng, speed = 0, heading = null, accuracy = 10 }) {
+    onPosition({
+      coords: {
+        latitude: lat,
+        longitude: lng,
+        speed: speed / 3.6,
+        heading: heading === null || heading === undefined ? null : heading,
+        accuracy,
+        timestamp: Date.now(),
+      },
+    })
+  }
+
   window.__TRACKER__ = state
   window.__TRACKER_API__ = {
     start,
@@ -415,5 +464,6 @@
     acquireWakeLock,
     releaseWakeLock,
     openImportSaveModal,
+    simulateFix,
   }
 })()

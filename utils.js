@@ -177,5 +177,24 @@ window.Utils = (() => {
     return dirs[Math.round(d / 45) % 8]
   }
 
-  return { haversine, formatDistance, formatDuration, parseCoords, toDMS, bearing, cardinal }
+  /**
+   * الاسم الرباعي للاتجاه بالعربية (8 أسماء)
+   * @returns {string} شمال / شمال شرق / شرق / جنوب شرق / جنوب / جنوب غرب / غرب / شمال غرب
+   */
+  function cardinalAr(deg) {
+    const dirs = ['شمال', 'شمال شرق', 'شرق', 'جنوب شرق', 'جنوب', 'جنوب غرب', 'غرب', 'شمال غرب']
+    const d = ((deg % 360) + 360) % 360
+    return dirs[Math.round(d / 45) % 8]
+  }
+
+  return {
+    haversine,
+    formatDistance,
+    formatDuration,
+    parseCoords,
+    toDMS,
+    bearing,
+    cardinal,
+    cardinalAr,
+  }
 })()

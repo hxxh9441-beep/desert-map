@@ -23,6 +23,7 @@
   const nav = {
     target: null, // {name, lat, lng}
     line: null,
+    glow: null, // طبقة التوهج تحت الخط
     marker: null,
     interval: null,
   }
@@ -62,16 +63,24 @@
     const from = origin()
     const to = [nav.target.lat, nav.target.lng]
 
-    // الخط المتقطع من الموقع إلى الهدف
+    // الخط المتقطع النيون السياني من الموقع إلى الهدف (مع توهج)
     if (!nav.line) {
+      nav.glow = L.polyline([from, to], {
+        color: '#22d3ee',
+        weight: 11,
+        opacity: 0.16,
+        lineCap: 'round',
+        interactive: false,
+      }).addTo(map)
       nav.line = L.polyline([from, to], {
-        color: '#FBBF24',
-        weight: 3,
+        color: '#22d3ee',
+        weight: 4,
         opacity: 0.95,
-        dashArray: '10 10',
+        dashArray: '10 12',
         lineCap: 'round',
       }).addTo(map)
     } else {
+      nav.glow.setLatLngs([from, to])
       nav.line.setLatLngs([from, to])
     }
 
@@ -82,12 +91,12 @@
       nav.marker.setLatLng(to)
     }
 
-    // شريط الهدف
+    // شريط الهدف: الاسم + العد التنازلي للمسافة + الاتجاه بالعربي
     const dist = Utils.haversine(from, to)
     const brg = Utils.bearing(from, to)
     targetName.textContent = nav.target.name
     targetDist.textContent = Utils.formatDistance(dist)
-    targetBearing.textContent = `${Math.round(brg)}° ${Utils.cardinal(brg)}`
+    targetBearing.textContent = `${Math.round(brg)}° ${Utils.cardinalAr(brg)}`
     targetHud.classList.add('open')
   }
 
@@ -102,6 +111,10 @@
 
   function clearTarget(showToastMsg = true) {
     nav.target = null
+    if (nav.glow) {
+      map.removeLayer(nav.glow)
+      nav.glow = null
+    }
     if (nav.line) {
       map.removeLayer(nav.line)
       nav.line = null
@@ -115,7 +128,7 @@
       nav.interval = null
     }
     targetHud.classList.remove('open')
-    if (showToastMsg) showToast('تم إلغاء الهدف')
+    if (showToastMsg) showToast('تم إنهاء الملاحة')
   }
 
   clearTargetBtn.addEventListener('click', () => clearTarget())
