@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>خارطة البر — ملاحة صحاري وطرق وعرة</title>
+    <meta name="theme-color" content="#0a0f1a" />
+    <meta
+      name="description"
+      content="تطبيق ملاحة للصحاري والطرق الوعرة — قمر صناعي، تضاريس، ووضع ليلي"
+    />
+
+    <!-- Leaflet -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <!-- Tailwind — بناء محلي ثابت (يعمل بدون إنترنت) -->
+    <link rel="stylesheet" href="tailwind.css" />
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon-64.png" />
+    <!-- التنسيق المخصص -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body class="h-dvh w-full overflow-hidden bg-[#0a0f1a] text-slate-100">
+    <!-- ═══════════ حاوية الخريطة (ملء الشاشة) ═══════════ -->
+    <div id="map" class="absolute inset-0 z-0"></div>
+
+    <!-- ═══════════ الترويسة العائمة ═══════════ -->
+    <header
+      class="pointer-events-none absolute inset-x-0 top-0 z-[1000] flex justify-center px-4 pt-[max(0.75rem,env(safe-area-inset-top))]"
+    >
+      <div
+        class="pointer-events-auto flex items-center gap-3 rounded-2xl border border-white/10 bg-[#0d1526]/85 px-4 py-2 shadow-xl shadow-black/40 backdrop-blur-md"
+      >
+        <span class="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-b from-cyan-500 to-violet-600 text-lg shadow-inner">
+          🧭
+        </span>
+        <div class="leading-tight">
+          <h1 class="text-base font-bold text-white">خارطة البر</h1>
+          <p class="text-[11px] text-slate-400">صحاري · طرق وعرة · ملاحة</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- ═══════════ شريط HUD: السرعة · المسافة · المدة ═══════════ -->
+    <div
+      class="pointer-events-none absolute inset-x-0 top-[5rem] z-[1000] flex justify-center px-4"
+    >
+      <div
+        class="pointer-events-auto grid w-full max-w-sm grid-cols-3 divide-x divide-x-reverse divide-white/10 rounded-2xl border border-white/10 bg-[#0d1526]/85 px-2 py-2 shadow-xl shadow-black/40 backdrop-blur-md"
+      >
+        <div class="hud-cell">
+          <span id="hudSpeed" class="hud-value hud-speed">0</span>
+          <span class="hud-label">السرعة كم/س</span>
+        </div>
+        <div class="hud-cell">
+          <span id="hudDistance" class="hud-value">0.00</span>
+          <span class="hud-label">المسافة كم</span>
+        </div>
+        <div class="hud-cell">
+          <span id="hudDuration" class="hud-value hud-duration">00:00:00</span>
+          <span class="hud-label">المدة</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ رسالة خطأ GPS ═══════════ -->
+    <div
+      id="gpsError"
+      class="absolute inset-x-0 top-[14rem] z-[1000] hidden justify-center px-4"
+    >
+      <p
+        class="rounded-xl border border-red-500/40 bg-red-950/80 px-3 py-2 text-xs font-semibold text-red-200 shadow-lg backdrop-blur-md"
+      ></p>
+    </div>
+
+    <!-- ═══════════ شريط الهدف (التوجه المباشر) ═══════════ -->
+    <div
+      id="targetHud"
+      class="absolute inset-x-0 top-[9.5rem] z-[1500] hidden justify-center px-4"
+    >
+      <div
+        class="flex w-full max-w-sm items-center gap-3 rounded-2xl border border-amber-400/40 bg-[#1a1505]/95 px-4 py-2.5 shadow-2xl shadow-black/50 backdrop-blur-md"
+      >
+        <span class="text-xl">🎯</span>
+        <div class="min-w-0 flex-1">
+          <p id="targetName" class="truncate text-sm font-bold text-amber-200"></p>
+          <p class="flex items-center gap-2 text-[11px] text-slate-300">
+            <span id="targetDist" class="font-extrabold text-amber-300"></span>
+            <span id="targetBearing" class="rounded bg-amber-400/15 px-1.5 py-0.5 font-bold text-amber-200"></span>
+          </p>
+        </div>
+        <button id="clearTargetBtn" class="track-action" type="button" aria-label="إلغاء الهدف">✖️</button>
+      </div>
+    </div>
+
+    <!-- ═══════════ شريط البحث عن إحداثيات ═══════════ -->
+    <div
+      class="absolute inset-x-0 bottom-[max(5.75rem,calc(env(safe-area-inset-bottom)+4.75rem))] z-[1500] flex flex-col items-center gap-1 px-4"
+    >
+      <div
+        class="flex w-full max-w-md items-center gap-2 rounded-2xl border border-white/10 bg-[#0d1526]/90 p-1.5 shadow-xl shadow-black/40 backdrop-blur-md"
+      >
+        <input
+          id="coordInput"
+          type="text"
+          inputmode="decimal"
+          autocomplete="off"
+          placeholder="إحداثيات: 24.7136, 46.6753 · DMS · DDM"
+          class="min-w-0 flex-1 bg-transparent px-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
+        />
+        <button id="coordGoBtn" class="coord-btn" type="button" aria-label="بحث عن الإحداثيات">🔍</button>
+        <button id="coordShareBtn" class="coord-btn" type="button" aria-label="مشاركة موقعي" title="مشاركة موقعي">📤</button>
+      </div>
+      <p id="coordHint" class="hidden rounded-lg bg-red-950/80 px-3 py-1 text-[11px] font-semibold text-red-200"></p>
+    </div>
+
+    <!-- ═══════════ مودال إضافة نقطة POI ═══════════ -->
+    <div
+      id="poiModal"
+      class="absolute inset-0 z-[2000] items-center justify-center bg-black/60 px-4 backdrop-blur-sm"
+    >
+      <div
+        class="w-full max-w-sm rounded-3xl border border-white/10 bg-[#0d1526] p-5 shadow-2xl shadow-black/60"
+      >
+        <h2 class="text-lg font-bold text-white">📌 إضافة نقطة</h2>
+        <p class="mt-1 text-xs text-slate-400">اضغط مطولاً على الخريطة أو زر أيمن لإضافة نقطة</p>
+        <div id="poiTypeGrid" class="mt-3 grid grid-cols-2 gap-2">
+          <button class="poi-type" data-type="camp" type="button">⛺ مخيم</button>
+          <button class="poi-type" data-type="water" type="button">💧 ماء/بئر</button>
+          <button class="poi-type" data-type="danger" type="button">⚠️ خطر/وعر</button>
+          <button class="poi-type" data-type="landmark" type="button">📍 معلم</button>
+        </div>
+        <input id="poiName" class="modal-input mt-3" type="text" placeholder="اسم النقطة (اختياري)" maxlength="60" />
+        <input id="poiNote" class="modal-input mt-2" type="text" placeholder="ملاحظة (اختياري)" maxlength="120" />
+        <div class="mt-4 flex gap-3">
+          <button id="poiSaveBtn" class="btn-primary" type="button">حفظ النقطة</button>
+          <button id="poiCancelBtn" class="btn-ghost" type="button">إلغاء</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ زر التسجيل المركزي ═══════════ -->
+    <div
+      class="absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-[1000] flex justify-center px-4"
+    >
+      <button id="recordBtn" class="record-btn" type="button" aria-label="بدء أو إيقاف تسجيل المسار">
+        <span id="recordDot" class="record-dot" aria-hidden="true"></span>
+        <span id="recordLabel">ابدأ التسجيل</span>
+      </button>
+    </div>
+
+    <!-- ═══════════ لوحة تبديل الطبقات ═══════════ -->
+    <div
+      id="layerPanel"
+      class="absolute bottom-24 left-4 z-[1000] w-56 rounded-2xl border border-white/10 bg-[#0d1526]/95 p-2 shadow-2xl shadow-black/60 backdrop-blur-md"
+    >
+      <p class="px-3 pb-1 pt-2 text-xs font-bold text-slate-400">الطبقة الأساسية</p>
+
+      <label class="layer-option" data-layer="satellite">
+        <input type="radio" name="baseLayer" value="satellite" checked class="sr-only" />
+        <span class="option-icon">🛰️</span>
+        <span class="flex-1">
+          <span class="block text-sm font-semibold text-white">قمر صناعي</span>
+          <span class="block text-[11px] text-slate-400">صورة حقيقية عالية الدقة</span>
+        </span>
+        <span class="option-check">✓</span>
+      </label>
+
+      <label class="layer-option" data-layer="terrain">
+        <input type="radio" name="baseLayer" value="terrain" class="sr-only" />
+        <span class="option-icon">⛰️</span>
+        <span class="flex-1">
+          <span class="block text-sm font-semibold text-white">تضاريس</span>
+          <span class="block text-[11px] text-slate-400">كنتور وارتفاعات ومناهل</span>
+        </span>
+        <span class="option-check">✓</span>
+      </label>
+
+      <label class="layer-option" data-layer="night">
+        <input type="radio" name="baseLayer" value="night" class="sr-only" />
+        <span class="option-icon">🌙</span>
+        <span class="flex-1">
+          <span class="block text-sm font-semibold text-white">ليلي</span>
+          <span class="block text-[11px] text-slate-400">وضع داكن — طريق سريع</span>
+        </span>
+        <span class="option-check">✓</span>
+      </label>
+
+      <!-- طبقة النقاط -->
+      <label class="poi-layer-toggle" for="poisToggle">
+        <input type="checkbox" id="poisToggle" checked class="sr-only" />
+        <span class="text-base">🏕️</span>
+        <span class="flex-1 text-sm font-semibold text-white">نقاط البر</span>
+        <span class="switch"><span class="track"></span></span>
+      </label>
+    </div>
+
+    <!-- ═══════════ مودال حفظ المسار ═══════════ -->
+    <div
+      id="saveModal"
+      class="absolute inset-0 z-[2000] items-center justify-center bg-black/60 px-4 backdrop-blur-sm"
+    >
+      <div
+        class="w-full max-w-sm rounded-3xl border border-white/10 bg-[#0d1526] p-5 shadow-2xl shadow-black/60"
+      >
+        <h2 class="text-lg font-bold text-white">💾 حفظ المسار</h2>
+        <p id="saveModalStats" class="mt-1 text-xs text-slate-400"></p>
+
+        <label for="trackName" class="mt-4 block text-sm font-semibold text-slate-300">
+          اسم المسار
+        </label>
+        <input
+          id="trackName"
+          type="text"
+          placeholder="مثال: درب النفود"
+          maxlength="60"
+          class="modal-input mt-1.5"
+        />
+
+        <label for="trackNotes" class="mt-3 block text-sm font-semibold text-slate-300">
+          ملاحظات <span class="text-slate-500">(اختياري)</span>
+        </label>
+        <textarea
+          id="trackNotes"
+          placeholder="مثال: رملي سهل، ينفع للمركبات الدفع الرباعي"
+          rows="2"
+          maxlength="200"
+          class="modal-input mt-1.5 resize-none"
+        ></textarea>
+
+        <div class="mt-5 flex gap-3">
+          <button id="saveTrackBtn" class="btn-primary" type="button">حفظ المسار</button>
+          <button id="discardTrackBtn" class="btn-ghost" type="button">تجاهل</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ مودال المشاركة ═══════════ -->
+    <div
+      id="shareModal"
+      class="absolute inset-0 z-[2000] items-center justify-center bg-black/60 px-4 backdrop-blur-sm"
+    >
+      <div
+        class="w-full max-w-sm rounded-3xl border border-white/10 bg-[#0d1526] p-5 shadow-2xl shadow-black/60"
+      >
+        <h2 class="text-lg font-bold text-white">📤 مشاركة المسار</h2>
+        <p id="shareModalName" class="mt-1 truncate text-sm font-semibold text-cyan-300"></p>
+        <div class="mt-5 flex flex-col gap-3">
+          <button id="copyLinkBtn" class="btn-primary" type="button">
+            🔗 نسخ رابط المشاركة
+          </button>
+          <button id="downloadGpxBtn" class="btn-ghost w-full" type="button">
+            ⬇️ تحميل ملف GPX
+          </button>
+          <button id="closeShareBtn" class="btn-ghost w-full" type="button">إلغاء</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ بانر المسار المستورد من الرابط ═══════════ -->
+    <div
+      id="importBanner"
+      class="absolute inset-x-0 bottom-[max(5.5rem,calc(env(safe-area-inset-bottom)+4.5rem))] z-[1500] hidden justify-center px-4"
+    >
+      <div
+        class="flex max-w-md items-center gap-3 rounded-2xl border border-cyan-400/30 bg-[#0d1526]/95 px-4 py-3 shadow-2xl shadow-black/50 backdrop-blur-md"
+      >
+        <span class="text-xl">🧭</span>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-sm font-bold text-white" id="importName"></p>
+          <p class="text-[11px] text-slate-400" id="importMeta"></p>
+        </div>
+        <button id="importSaveBtn" class="btn-primary !min-h-[44px] !rounded-xl px-4 !text-sm" type="button">
+          💾 حفظ
+        </button>
+        <button id="importCloseBtn" class="track-action" type="button" aria-label="إغلاق">✖️</button>
+      </div>
+    </div>
+
+    <!-- ═══════════ لوحة المسارات المحفوظة ═══════════ -->
+    <div
+      id="tracksPanel"
+      class="absolute bottom-24 right-4 z-[1000] flex max-h-[60vh] w-72 flex-col rounded-2xl border border-white/10 bg-[#0d1526]/95 shadow-2xl shadow-black/60 backdrop-blur-md"
+    >
+      <div class="flex items-center justify-between px-4 pb-1 pt-3">
+        <p class="text-xs font-bold text-slate-400">المسارات المحفوظة</p>
+        <div class="flex items-center gap-2">
+          <span id="tracksCount" class="text-[11px] text-slate-500"></span>
+          <button id="importGpxBtn" class="gpx-btn" type="button" aria-label="استيراد ملف GPX">
+            ⬆️ GPX
+          </button>
+        </div>
+      </div>
+      <input id="gpxFileInput" type="file" accept=".gpx,.xml,application/gpx+xml" class="hidden" />
+      <div id="tracksList" class="max-h-[48vh] flex-1 overflow-y-auto px-2 pb-2"></div>
+    </div>
+
+    <!-- ═══════════ الأزرار العائمة (FABs) ═══════════ -->
+    <nav
+      class="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 z-[1000] flex flex-col gap-3"
+    >
+      <button id="layersBtn" class="fab" type="button" aria-label="تبديل الطبقات" aria-expanded="false">
+        🗺️
+      </button>
+      <button id="tracksBtn" class="fab" type="button" aria-label="المسارات المحفوظة" aria-expanded="false">
+        🗂️
+      </button>
+      <button id="locateBtn" class="fab" type="button" aria-label="إعادة التمركز على موقعي">
+        🎯
+      </button>
+    </nav>
+
+    <!-- Leaflet JS -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <!-- أدوات الحساب -->
+    <script src="utils.js"></script>
+    <!-- منطق التطبيق -->
+    <script src="app.js"></script>
+    <!-- محرك التتبع GPS -->
+    <script src="tracker.js"></script>
+    <!-- محرك التخزين المحلي -->
+    <script src="storage.js"></script>
+    <!-- واجهة إدارة المسارات -->
+    <script src="tracks.js"></script>
+    <!-- المشاركة والتصدير (GPX + رابط) -->
+    <script src="share.js"></script>
+    <!-- نظام نقاط الاهتمام -->
+    <script src="pois.js"></script>
+    <!-- ناقل التوجيه والإحداثيات الذكية -->
+    <script src="nav.js"></script>
+    <!-- تسجيل عامل الخدمة (الأوفلاين) -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('service-worker.js').catch(() => {})
+        })
+      }
+    </script>
+  </body>
+</html>
