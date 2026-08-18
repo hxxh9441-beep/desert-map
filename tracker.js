@@ -109,8 +109,27 @@
   }
 
   /* ---------- مؤشر الموقع الحي ---------- */
+  let accuracyCircle = null // دائرة دقة GPS
+
+  function updateAccuracyCircle(lat, lng, accuracy) {
+    const r = Math.max(accuracy || 25, 10)
+    if (!accuracyCircle) {
+      accuracyCircle = L.circle([lat, lng], {
+        radius: r,
+        color: '#22d3ee',
+        weight: 1,
+        fillColor: '#22d3ee',
+        fillOpacity: 0.08,
+        interactive: false,
+      }).addTo(map)
+    } else {
+      accuracyCircle.setLatLng([lat, lng])
+      accuracyCircle.setRadius(r)
+    }
+  }
+
   function updateLocationMarker() {
-    if (!state.lastKnown || !state.recording) return
+    if (!state.lastKnown) return
     const { lat, lng, heading } = state.lastKnown
     if (!locationMarker) {
       locationMarker = L.marker([lat, lng], { icon: LOC_ICON, zIndexOffset: 1000 }).addTo(map)
@@ -151,6 +170,7 @@
       ts: now,
     }
     updateLocationMarker()
+    if (typeof accuracy === 'number') updateAccuracyCircle(latitude, longitude, accuracy)
 
     // أول إحداثي: نقبله دائماً ونتمركز عليه
     if (state.points.length === 0) {
@@ -258,7 +278,6 @@
     }
     // نطلق إبقاء الشاشة — انتهى التسجيل
     releaseWakeLock()
-    removeLocationMarker()
     updateUI()
 
     // إن وُجد مسار مسجّل — نعرض مودال الحفظ
@@ -358,38 +377,34 @@
     else start()
   })
 
-  /* ---------- زر إعادة التمركز (🎯) — يعيد التمركز والتكبير على موقعك ---------- */
+  /* ---------- موقع من افتتاح التطبيق أو زر 🎯 (map.locate) ----------
+     app.js يستدعي map.locate ويرسل desert:located — نرسم هنا الماركر
+     حتى بدون تسجيل: نقطة نيون نابضة + دائرة دقة */
+  window.addEventListener('desert:located', (e) => {
+    const d = e.detail || {}
+    if (!isFinite(d.lat) || !isFinite(d.lng)) return
+    state.lastKnown = { lat: d.lat, lng: d.lng, heading: null, ts: Date.now() }
+    updateLocationMarker()
+    updateAccuracyCircle(d.lat, d.lng, d.accuracy)
+  })
+
+  /* ---------- زر إعادة التمركز (🎯) — map.locate مع تمركز وتكبير ---------- */
   const locateBtn = document.getElementById('locateBtn')
   locateBtn.disabled = false
   locateBtn.title = 'إعادة التمركز على موقعي'
   locateBtn.addEventListener('click', () => {
     if (!navigator.geolocation) return
 
-    // إن وُجد آخر موقع معروف (من التسجيل) — نعيد التمركز عليه فوراً
+    // إن وُجد آخر موقع معروف — نعيد التمركز عليه فوراً
     if (state.lastKnown) {
       map.setView([state.lastKnown.lat, state.lastKnown.lng], Math.max(map.getZoom(), 16))
-      return
     }
 
-    locateBtn.disabled = true
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude, heading } = pos.coords
-        state.lastKnown = {
-          lat: latitude,
-          lng: longitude,
-          heading: typeof heading === 'number' && isFinite(heading) ? heading : null,
-          ts: Date.now(),
-        }
-        map.setView([latitude, longitude], Math.max(map.getZoom(), 16))
-        locateBtn.disabled = false
-      },
-      () => {
-        locateBtn.disabled = false
-        showToast('⚠️ تعذر تحديد موقعك — تحقق من تفعيل GPS')
-      },
-      { enableHighAccuracy: true, timeout: 8000 }
-    )
+    // locate مع setView + maxZoom 16 — يحدّث الماركر والدائرة عبر desert:located
+    map.locate({ setView: true, maxZoom: 16, enableHighAccuracy: true, timeout: 10000 })
+    setTimeout(() => {
+      locateBtn.disabled = false
+    }, 12000)
   })
 
   /* ---------- كشف للاختبار والمراحل القادمة ---------- */

@@ -120,42 +120,134 @@
 
   clearTargetBtn.addEventListener('click', () => clearTarget())
 
-  /* ---------- البحث عن إحداثيات ---------- */
-  function searchCoords() {
-    const val = coordInput.value.trim()
-    if (!val) {
-      coordHint.textContent = 'اكتب إحداثيات…'
-      coordHint.classList.remove('hidden')
-      return
-    }
-    const c = Utils.parseCoords(val)
-    if (!c) {
-      coordHint.textContent = '⚠️ صيغة غير معروفة — جرّب: 24.7136, 46.6753'
-      coordHint.classList.remove('hidden')
-      return
-    }
-    coordHint.classList.add('hidden')
-    map.setView([c.lat, c.lng], Math.max(map.getZoom(), 16))
-    dropTempMarker(c.lat, c.lng)
+  /* ---------- البحث: إحداثيات أو أماكن (Nominatim) ---------- */
+  const searchToggleBtn = document.getElementById('searchToggleBtn')
+  const searchWrap = document.getElementById('searchWrap')
+  const searchCloseBtn = document.getElementById('searchCloseBtn')
+  const searchResults = document.getElementById('searchResults')
 
-    // عرض ملخص مع زر التوجيه
+  // طي/توسيع شريط البحث
+  function openSearch() {
+    searchWrap.classList.remove('hidden')
+    searchToggleBtn.classList.add('hidden')
+    setTimeout(() => coordInput.focus(), 60)
+  }
+  function closeSearch() {
+    searchWrap.classList.add('hidden')
+    searchToggleBtn.classList.remove('hidden')
+    hideResults()
+    coordHint.classList.add('hidden')
+  }
+  searchToggleBtn.addEventListener('click', openSearch)
+  searchCloseBtn.addEventListener('click', closeSearch)
+
+  function hideResults() {
+    searchResults.classList.add('hidden')
+    searchResults.innerHTML = ''
+  }
+
+  // الانتقال لمكان + ماركر مؤقت
+  function flyToPlace(lat, lng, name, zoom) {
+    map.setView([lat, lng], Math.max(map.getZoom(), zoom || 16))
+    dropTempMarker(lat, lng)
     const popup = L.popup({ closeButton: true, offset: [0, -12] })
-      .setLatLng([c.lat, c.lng])
+      .setLatLng([lat, lng])
       .setContent(
         `<div class="poi-popup">
-          <p class="poi-popup-title">📍 ${Utils.toDMS(c.lat, c.lng)}</p>
+          <p class="poi-popup-title">📍 ${name}</p>
+          <p class="poi-popup-sub">${Utils.toDMS(lat, lng)}</p>
           <div class="poi-popup-actions">
-            <button class="poi-popup-btn" data-nav-target="1" data-name="${encodeURIComponent('إحداثيات مخصصة')}" data-lat="${c.lat}" data-lng="${c.lng}">🧭 التوجه للهدف</button>
+            <button class="poi-popup-btn" data-nav-target="1" data-name="${encodeURIComponent(name)}" data-lat="${lat}" data-lng="${lng}">🧭 التوجه للهدف</button>
           </div>
         </div>`
       )
       .openOn(map)
-    coordInput.value = ''
   }
 
-  coordGoBtn.addEventListener('click', searchCoords)
+  // بحث نصي عبر Nominatim (أسماء مدن/أماكن — يدعم العربية)
+  async function nominatimSearch(q) {
+    try {
+      const url =
+        'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&accept-language=ar&q=' +
+        encodeURIComponent(q)
+      const res = await fetch(url, { headers: { Accept: 'application/json' } })
+      if (!res.ok) return []
+      const data = await res.json()
+      return data.map((r) => ({
+        name: r.display_name || r.name || q,
+        lat: parseFloat(r.lat),
+        lng: parseFloat(r.lon),
+        type: r.type || '',
+      }))
+    } catch {
+      return []
+    }
+  }
+
+  function searchCoords() {
+    const val = coordInput.value.trim()
+    if (!val) {
+      coordHint.textContent = 'اكتب اسم مكان أو إحداثيات…'
+      coordHint.classList.remove('hidden')
+      return
+    }
+
+    // 1) محاولة الإحداثيات أولاً (DD/DMS/DDM)
+    const c = Utils.parseCoords(val)
+    if (c) {
+      coordHint.classList.add('hidden')
+      hideResults()
+      flyToPlace(c.lat, c.lng, 'إحداثيات مخصصة')
+      coordInput.value = ''
+      return
+    }
+
+    // 2) بحث نصي — Nominatim
+    coordHint.classList.add('hidden')
+    nominatimSearch(val).then((results) => {
+      if (results.length === 0) {
+        coordHint.textContent = '⚠️ ما لقينا المكان — جرّب: الرياض أو 24.7136, 46.6753'
+        coordHint.classList.remove('hidden')
+        hideResults()
+        return
+      }
+      // قائمة النتائج
+      searchResults.innerHTML = results
+        .map(
+          (r, i) => `
+          <button class="search-result-item" data-idx="${i}" type="button">
+            <span class="search-result-icon">${r.type === 'city' || r.type === 'town' || r.type === 'village' ? '🏙️' : r.type === 'water' || r.type === 'river' ? '💧' : r.type === 'mountain' || r.type === 'peak' ? '⛰️' : '📍'}</span>
+            <span class="min-w-0 flex-1 text-right">
+              <span class="block truncate text-sm font-semibold text-white">${r.name.split(',').slice(0, 2).join('،')}</span>
+              <span class="block truncate text-[11px] text-slate-400">${Utils.toDMS(r.lat, r.lng)}</span>
+            </span>
+          </button>`
+        )
+        .join('')
+      searchResults.classList.remove('hidden')
+      // النقر على نتيجة
+      searchResults.querySelectorAll('.search-result-item').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const r = results[parseInt(btn.dataset.idx, 10)]
+          if (!r) return
+          hideResults()
+          flyToPlace(r.lat, r.lng, r.name.split(',')[0])
+          coordInput.value = ''
+          closeSearch()
+        })
+      })
+    })
+  }
+
   coordInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') searchCoords()
+  })
+
+  // إغلاق النتائج عند النقر خارجها
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#searchResults') && !e.target.closest('#searchWrap')) {
+      hideResults()
+    }
   })
 
   /* ---------- مشاركة موقعي ---------- */

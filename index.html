@@ -35,29 +35,24 @@
     <!-- ═══════════ حاوية الخريطة (ملء الشاشة) ═══════════ -->
     <div id="map" class="absolute inset-0 z-0"></div>
 
-    <!-- ═══════════ الترويسة العائمة ═══════════ -->
+    <!-- ═══════════ الترويسة المصغرة (شعار فقط) ═══════════ -->
     <header
-      class="pointer-events-none absolute inset-x-0 top-0 z-[1000] flex justify-center px-4 pt-[max(0.75rem,env(safe-area-inset-top))]"
+      class="pointer-events-none absolute inset-x-0 top-0 z-[1000] flex items-start justify-between logo-top px-3"
     >
       <div
-        class="pointer-events-auto flex items-center gap-3 rounded-2xl border border-white/10 bg-[#0d1526]/85 px-4 py-2 shadow-xl shadow-black/40 backdrop-blur-md"
+        class="pointer-events-auto logo-chip grid h-11 w-11 place-items-center rounded-2xl border border-white/10 text-xl shadow-lg shadow-black/40 backdrop-blur-md"
+        title="خارطة البر"
       >
-        <span class="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-b from-cyan-500 to-violet-600 text-lg shadow-inner">
-          🧭
-        </span>
-        <div class="leading-tight">
-          <h1 class="text-base font-bold text-white">خارطة البر</h1>
-          <p class="text-[11px] text-slate-400">صحاري · طرق وعرة · ملاحة</p>
-        </div>
+        🧭
       </div>
     </header>
 
     <!-- ═══════════ شريط HUD: السرعة · المسافة · المدة ═══════════ -->
     <div
-      class="pointer-events-none absolute inset-x-0 top-[5rem] z-[1000] flex justify-center px-4"
+      class="pointer-events-none hud-top absolute inset-x-0 z-[1000] flex justify-center px-4"
     >
       <div
-        class="pointer-events-auto grid w-full max-w-sm grid-cols-3 divide-x divide-x-reverse divide-white/10 rounded-2xl border border-white/10 bg-[#0d1526]/85 px-2 py-2 shadow-xl shadow-black/40 backdrop-blur-md"
+        class="pointer-events-auto hud-glass grid w-full max-w-sm grid-cols-3 divide-x divide-x-reverse divide-white/10 rounded-2xl border border-white/10 px-2 py-2 shadow-lg shadow-black/30 backdrop-blur-md"
       >
         <div class="hud-cell">
           <span id="hudSpeed" class="hud-value hud-speed">0</span>
@@ -104,25 +99,41 @@
       </div>
     </div>
 
-    <!-- ═══════════ شريط البحث عن إحداثيات ═══════════ -->
+    <!-- ═══════════ البحث: إحداثيات أو أسماء أماكن (قابل للطي) ═══════════ -->
     <div
-      class="absolute inset-x-0 bottom-[max(5.75rem,calc(env(safe-area-inset-bottom)+4.75rem))] z-[1500] flex flex-col items-center gap-1 px-4"
+      class="search-dock absolute inset-x-0 z-[1500] flex flex-col items-center px-4"
     >
-      <div
-        class="flex w-full max-w-md items-center gap-2 rounded-2xl border border-white/10 bg-[#0d1526]/90 p-1.5 shadow-xl shadow-black/40 backdrop-blur-md"
+      <!-- زر البحث المغلق (دائرة) -->
+      <button
+        id="searchToggleBtn"
+        class="search-fab"
+        type="button"
+        aria-label="بحث عن مكان أو إحداثيات"
+        title="بحث عن مكان أو إحداثيات"
       >
+        🔍
+      </button>
+
+      <!-- الشريط الموسّع -->
+      <div
+        id="searchWrap"
+        class="search-wrap hidden"
+      >
+        <span class="search-icon" aria-hidden="true">🔍</span>
         <input
           id="coordInput"
           type="text"
-          inputmode="decimal"
+          inputmode="search"
           autocomplete="off"
-          placeholder="إحداثيات: 24.7136, 46.6753 · DMS · DDM"
-          class="min-w-0 flex-1 bg-transparent px-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
+          placeholder="مكان (الرياض، روضة خريم…) أو إحداثيات DD/DMS"
+          class="search-input"
         />
-        <button id="coordGoBtn" class="coord-btn" type="button" aria-label="بحث عن الإحداثيات">🔍</button>
-        <button id="coordShareBtn" class="coord-btn" type="button" aria-label="مشاركة موقعي" title="مشاركة موقعي">📤</button>
+        <button id="coordShareBtn" class="search-act" type="button" aria-label="مشاركة موقعي" title="مشاركة موقعي">📤</button>
+        <button id="searchCloseBtn" class="search-act" type="button" aria-label="إغلاق البحث" title="إغلاق">✖️</button>
       </div>
       <p id="coordHint" class="hidden rounded-lg bg-red-950/80 px-3 py-1 text-[11px] font-semibold text-red-200"></p>
+      <!-- نتائج البحث النصي -->
+      <div id="searchResults" class="search-results hidden"></div>
     </div>
 
     <!-- ═══════════ مودال إضافة نقطة POI ═══════════ -->
@@ -160,12 +171,13 @@
       </button>
     </div>
 
-    <!-- ═══════════ لوحة تبديل الطبقات ═══════════ -->
+    <!-- ═══════════ لوحة تبديل الطبقات (Bottom Sheet) ═══════════ -->
     <div
       id="layerPanel"
-      class="absolute bottom-24 left-4 z-[1000] w-56 rounded-2xl border border-white/10 bg-[#0d1526]/95 p-2 shadow-2xl shadow-black/60 backdrop-blur-md"
+      class="layer-sheet"
     >
-      <p class="px-3 pb-1 pt-2 text-xs font-bold text-slate-400">الطبقة الأساسية</p>
+      <div class="layer-sheet-handle" aria-hidden="true"></div>
+      <p class="px-3 pb-1 pt-1 text-xs font-bold text-slate-400">الطبقة الأساسية</p>
 
       <label class="layer-option" data-layer="satellite">
         <input type="radio" name="baseLayer" value="satellite" checked class="sr-only" />
@@ -173,6 +185,26 @@
         <span class="flex-1">
           <span class="block text-sm font-semibold text-white">قمر صناعي</span>
           <span class="block text-[11px] text-slate-400">صورة حقيقية عالية الدقة</span>
+        </span>
+        <span class="option-check">✓</span>
+      </label>
+
+      <label class="layer-option" data-layer="hybrid">
+        <input type="radio" name="baseLayer" value="hybrid" class="sr-only" />
+        <span class="option-icon">🧭</span>
+        <span class="flex-1">
+          <span class="block text-sm font-semibold text-white">هجين</span>
+          <span class="block text-[11px] text-slate-400">قمر صناعي + أسماء المدن والشوارع</span>
+        </span>
+        <span class="option-check">✓</span>
+      </label>
+
+      <label class="layer-option" data-layer="streets">
+        <input type="radio" name="baseLayer" value="streets" class="sr-only" />
+        <span class="option-icon">🏙️</span>
+        <span class="flex-1">
+          <span class="block text-sm font-semibold text-white">شوارع</span>
+          <span class="block text-[11px] text-slate-400">خريطة OSM — أسماء عربية واضحة</span>
         </span>
         <span class="option-check">✓</span>
       </label>
@@ -306,9 +338,9 @@
       <div id="tracksList" class="max-h-[48vh] flex-1 overflow-y-auto px-2 pb-2"></div>
     </div>
 
-    <!-- ═══════════ الأزرار العائمة (FABs) ═══════════ -->
+    <!-- ═══════════ شريط الأدوات العمودي (يسار — فوق زر التسجيل) ═══════════ -->
     <nav
-      class="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 z-[1000] flex flex-col gap-3"
+      class="toolbar-dock absolute left-4 z-[1000] flex flex-col"
     >
       <button id="layersBtn" class="fab" type="button" aria-label="تبديل الطبقات" aria-expanded="false">
         🗺️
