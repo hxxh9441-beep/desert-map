@@ -9,11 +9,12 @@
   const map = window.__MAP__
   const TRACKER = window.__TRACKER__
 
-  /* ---------- لوحة الخريطة (نلفّها مباشرة عند الدوران) ----------
+  /* ---------- لوحة الخريطة (الدوران عبر خاصية rotate المستقلة) ----------
      الحاوية بحجم الشاشة بالضبط (100vw×100vh) ومركزها هو مركز الشاشة،
-     فنلف لوحة الخريطة حول 50vw 50vh ونركّب الدوران مع أي transform
-     يكتبه Leaflet (عبر ترقيع setPosition) — فيبقى مركز الإحداثيات
-     مطابقاً لمركز الشاشة ولا ينفصل محور السحب */
+     فنلف لوحة الخريطة حول 50vw 50vh عبر CSS rotate (خاصية مستقلة لا
+     يمسّها Leaflet — يكتب transform فقط) فتبقى الترجمة في الإطار
+     المدوّر: screen = R(r)·(p - O) + R(r)·P + O، والسحب يُصحَّح
+     بعكس الدوران (ΔP = R(-r)·Δ) فيبقى المحتوى تحت الإصبع تماماً */
   const mapPane = document.querySelector('.leaflet-map-pane')
 
   const compassBtn = document.getElementById('compassBtn')
@@ -31,12 +32,14 @@
     return ((d % 360) + 360) % 360
   }
 
-  /* ---------- تطبيق الدوران (لوحة الخريطة + إبرة البوصلة) ---------- */
+  /* ---------- تطبيق الدوران (لوحة الخريطة + إبرة البوصلة) ----------
+     الدوران عبر خاصية CSS المستقلة rotate — Leaflet يكتب transform فقط
+     ولا يمسّ rotate، فلا يُجرد الدوران عند السحب/الزوم/التحريك */
   function applyRotation(deg) {
     currentRotation = deg
     if (mapPane) {
       mapPane.style.setProperty('--map-rotation', `${deg}deg`)
-      composeRotation()
+      mapPane.style.rotate = `${deg}deg`
     }
     if (compassNeedle) compassNeedle.style.transform = `rotate(${deg}deg)`
     // القصور الذاتي يُفعَّل فقط في وضع الشمال (زاوية ≈ 0)
@@ -45,34 +48,6 @@
     if (map.options.inertia !== wantInertia) map.options.inertia = wantInertia
     // عند تجاوز عتبة الدوران: نحمّل هامش البلاطات (مرة واحدة)
     refreshTileMargin(Math.abs(r) >= 0.5)
-  }
-
-  /* ---------- تركيب الدوران مع transform الحالي للوحة ----------
-     Leaflet يكتب translate3d(...) (وأحياناً scale أثناء زوم) —
-     نزيل أي rotate سابق ونعيد إضافته بعدها (rotate يطبق أولاً ثم
-     scale ثم translate فلا يتعارض مع حساب زوم Leaflet) */
-  function composeRotation() {
-    if (!mapPane) return
-    const r = ((currentRotation % 360) + 360) % 360
-    let t = mapPane.style.transform || ''
-    t = t.replace(/\s*rotate\([^)]*\)/g, '')
-    if (Math.abs(r) >= 0.5) t += ` rotate(${r}deg)`
-    mapPane.style.transform = t
-  }
-
-  /* ---------- ترقيع setPosition: الدوران يبقى بعد كل كتابة ----------
-     كل حركة/زوم/سحب يمر عبر L.DomUtil.setPosition على لوحة الخريطة —
-     نعيد تركيب الدوران فوراً حتى لا يمسحه Leaflet */
-  function patchSetPosition() {
-    const orig = L.DomUtil.setPosition
-    if (L.DomUtil.setPosition.__rotPatched) return
-    L.DomUtil.setPosition.__rotPatched = true
-    L.DomUtil.setPosition = function (el, point, scale) {
-      orig.call(this, el, point, scale)
-      if (el && el.classList && el.classList.contains('leaflet-map-pane')) {
-        composeRotation()
-      }
-    }
   }
 
   /* ---------- هامش بلاطات يغطي الدوران ----------
@@ -260,10 +235,13 @@
   })
 
   /* ---------- تصحيح سحب الخريطة عند الدوران ----------
-     Leaflet يحسب إزاحة السحب في إحداثيات الشاشة غير المدوّرة،
-     فتتحرك الخريطة قطرياً/معكوسة عند دوران الغلاف. الحل: نلتف حول
-     _onMove لمحرك السحب وندوّر الإزاحة عكس زاوية الخريطة (rotateVector)
-     حتى تتبع المحتوى إصبعك تماماً في كل الاتجاهات. */
+     التحويل الآن: screen = R(r)·(p - O) + R(r)·P + O — الترجمة P
+     تُطبَّق في الإطار المدوّر (خاصية rotate تُركَّب بعد transform).
+     فتتبّع الإصبع يتطلب: ΔP = R(-r)·Δالشاشة — عكس دوران CSS تماماً
+     (نفس صيغة screenDeltaToMapDelta). نلتف حول _onMove لمحرك السحب
+     وندوّر الإزاحة عكس زاوية الخريطة حتى يتبع المحتوى الإصبع تماماً.
+     ملاحظة: القصور الذاتي معطّل أثناء الدوران (syncInertia) فلن
+     يتأثر اتجاه اندفاعه بإحداثيات اللوحة المدوّرة. */
   function patchDragRotation() {
     const handler = map.dragging
     const draggable = handler && handler._draggable
@@ -278,9 +256,9 @@
       const r = ((rot % 360) + 360) % 360
       if (Math.abs(r) < 0.5) return
 
-      // الإزاحة التي طبقها Leaflet (إحداثيات الشاشة)
+      // الإزاحة التي طبقها Leaflet (إحداثيات الشاشة الخام)
       const delta = this._newPos.subtract(this._startPos)
-      // دوران عكسي للإزاحة (rotateVector بزاوية -θ)
+      // دوران عكسي: ΔP = R(-r)·Δ (عكس دوران CSS لتعويض الإطار المدوّر)
       const rad = (-r * Math.PI) / 180
       const cos = Math.cos(rad)
       const sin = Math.sin(rad)
@@ -288,7 +266,6 @@
 
       const corrected = this._startPos.add(rd)
       this._newPos = corrected
-      this._lastPos = corrected // يصحح اتجاه القصور الذاتي (flick)
       L.DomUtil.setPosition(this._element, corrected)
     }
   }
@@ -307,7 +284,11 @@
   })
 
   /* ---------- تصحيح النقر عند دوران الخريطة ----------
-     تحويل نقطة الشاشة إلى نقطة حاوية غير مدوّرة (لإسقاط الدبابيس) */
+     تحويل نقطة الشاشة إلى نقطة حاوية غير مدوّرة (لإسقاط الدبابيس).
+     من screen = R(r)·(p - O) + R(r)·P + O:
+       layer = R(-r)·(S - O) - P + O
+     ونقطة الحاوية غير المدوّرة S' = layer + P = O + R(-r)·(S - O)
+     — حدود موضع اللوحة P تلغي رياضياً، فالصيغة بسيطة ودقيقة دائماً. */
   function unrotatePoint(p) {
     const R = (-currentRotation * Math.PI) / 180
     const size = map.getSize()
@@ -325,7 +306,6 @@
   }
 
   /* ---------- التشغيل ---------- */
-  patchSetPosition()
   patchDragRotation()
   // وسّع نطاق تحميل البلاطات لكل الطبقات (يغطي زوايا الدوران)
   Object.values(window.__LAYERS__ || {}).forEach((l) => patchTileMargin(l))
