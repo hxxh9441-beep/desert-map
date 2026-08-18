@@ -32,25 +32,18 @@
   </head>
 
   <body class="h-dvh w-full overflow-hidden bg-[#0a0f1a] text-slate-100">
-    <!-- ═══════════ حاوية الخريطة (ملء الشاشة) ═══════════ -->
-    <div id="map" class="absolute inset-0 z-0"></div>
+    <!-- ═══════════ حاوية الخريطة (ملء الشاشة — 150vmax لاستيعاب الدوران) ═══════════ -->
+    <div id="map" class="map-canvas"></div>
 
-    <!-- ═══════════ الترويسة: شعار + شريط بحث كامل + بوصلة ═══════════ -->
+    <!-- ═══════════ الترويسة: شريط بحث كامل العرض (شعار + بحث + بوصلة) ═══════════ -->
     <header
-      class="pointer-events-none absolute inset-x-0 top-0 z-[1200] flex items-center gap-2 logo-top px-3"
+      class="pointer-events-none absolute inset-x-0 top-0 z-[1200] logo-top px-4"
     >
       <div
-        class="pointer-events-auto logo-chip grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/10 text-xl shadow-lg shadow-black/40 backdrop-blur-md"
-        title="خارطة البر"
-      >
-        🧭
-      </div>
-
-      <!-- شريط البحث العلوي الكامل (أسماء أماكن عربية أو إحداثيات) -->
-      <div
         id="searchWrap"
-        class="pointer-events-auto search-wrap top-search min-w-0 flex-1"
+        class="pointer-events-auto search-wrap top-search min-w-0 w-full"
       >
+        <span class="logo-mini" title="خارطة البر">🧭</span>
         <span class="search-icon" aria-hidden="true">🔍</span>
         <input
           id="coordInput"
@@ -62,23 +55,23 @@
         />
         <button id="coordClearBtn" class="search-act hidden" type="button" aria-label="مسح البحث" title="مسح البحث">✕</button>
         <button id="coordShareBtn" class="search-act" type="button" aria-label="مشاركة موقعي" title="مشاركة موقعي">📤</button>
-      </div>
 
-      <!-- البوصلة التفاعلية (تدور مع الخريطة — اضغط للشمال) -->
-      <button
-        id="compassBtn"
-        class="pointer-events-auto compass-btn shrink-0"
-        type="button"
-        aria-label="البوصلة — الشمال للأعلى"
-        title="الشمال للأعلى — اضغط لوضع اتجاه السير"
-      >
-        <svg id="compassNeedle" viewBox="0 0 48 48" aria-hidden="true">
-          <circle cx="24" cy="24" r="22" fill="rgba(13,21,38,0.88)" stroke="rgba(255,255,255,0.18)" stroke-width="1.5" />
-          <path d="M24 6.5 L28.6 24 L24 20.8 L19.4 24 Z" fill="#ef4444" />
-          <path d="M24 41.5 L19.4 24 L24 27.2 L28.6 24 Z" fill="#cbd5e1" />
-          <circle cx="24" cy="24" r="3.2" fill="#0f172a" stroke="#7dd3fc" stroke-width="1.6" />
-        </svg>
-      </button>
+        <!-- البوصلة التفاعلية (تدور مع الخريطة — اضغط للشمال) -->
+        <button
+          id="compassBtn"
+          class="compass-btn compass-mini"
+          type="button"
+          aria-label="البوصلة — الشمال للأعلى"
+          title="الشمال للأعلى — اضغط لوضع اتجاه السير"
+        >
+          <svg id="compassNeedle" viewBox="0 0 48 48" aria-hidden="true">
+            <circle cx="24" cy="24" r="22" fill="rgba(13,21,38,0.88)" stroke="rgba(255,255,255,0.18)" stroke-width="1.5" />
+            <path d="M24 6.5 L28.6 24 L24 20.8 L19.4 24 Z" fill="#ef4444" />
+            <path d="M24 41.5 L19.4 24 L24 27.2 L28.6 24 Z" fill="#cbd5e1" />
+            <circle cx="24" cy="24" r="3.2" fill="#0f172a" stroke="#7dd3fc" stroke-width="1.6" />
+          </svg>
+        </button>
+      </div>
     </header>
 
     <!-- نتائج البحث (تنسدل تحت الترويسة) -->

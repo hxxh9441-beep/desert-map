@@ -40,6 +40,10 @@
     currentRotation = deg
     if (wrap) wrap.style.transform = `rotate(${deg}deg)`
     if (compassNeedle) compassNeedle.style.transform = `rotate(${deg}deg)`
+    // القصور الذاتي يُفعَّل فقط في وضع الشمال (زاوية ≈ 0)
+    const r = ((deg % 360) + 360) % 360
+    const wantInertia = Math.abs(r) < 0.5
+    if (map.options.inertia !== wantInertia) map.options.inertia = wantInertia
   }
 
   /* ---------- مستشعر اتجاه الجهاز ---------- */
@@ -176,6 +180,53 @@
     pinch = null
   })
 
+  /* ---------- تصحيح سحب الخريطة عند الدوران ----------
+     Leaflet يحسب إزاحة السحب في إحداثيات الشاشة غير المدوّرة،
+     فتتحرك الخريطة قطرياً/معكوسة عند دوران الغلاف. الحل: نلتف حول
+     _onMove لمحرك السحب وندوّر الإزاحة عكس زاوية الخريطة (rotateVector)
+     حتى تتبع المحتوى إصبعك تماماً في كل الاتجاهات. */
+  function patchDragRotation() {
+    const handler = map.dragging
+    const draggable = handler && handler._draggable
+    if (!draggable || draggable.__rotPatched) return
+    draggable.__rotPatched = true
+
+    const origOnMove = draggable._onMove
+    draggable._onMove = function (e) {
+      origOnMove.call(this, e)
+
+      const rot = window.__ROTATE__ ? window.__ROTATE__.currentDeg() : 0
+      const r = ((rot % 360) + 360) % 360
+      if (Math.abs(r) < 0.5) return
+
+      // الإزاحة التي طبقها Leaflet (إحداثيات الشاشة)
+      const delta = this._newPos.subtract(this._startPos)
+      // دوران عكسي للإزاحة (rotateVector بزاوية -θ)
+      const rad = (-r * Math.PI) / 180
+      const cos = Math.cos(rad)
+      const sin = Math.sin(rad)
+      const rd = L.point(delta.x * cos - delta.y * sin, delta.x * sin + delta.y * cos)
+
+      const corrected = this._startPos.add(rd)
+      this._newPos = corrected
+      this._lastPos = corrected // يصحح اتجاه القصور الذاتي (flick)
+      L.DomUtil.setPosition(this._element, corrected)
+    }
+  }
+
+  /* ---------- تعطيل القصور الذاتي عند الدوران ----------
+     سرعة القصور الذاتي تُحسب بإحداثيات Leaflet غير المدوّرة —
+     نتجنب اندفاعاً باتجاه خاطئ بصرياً ونعتمد على سحب مباشر */
+  function syncInertia() {
+    const r = ((currentRotation % 360) + 360) % 360
+    map.options.inertia = Math.abs(r) < 0.5
+  }
+
+  /* ---------- إعادة قياس الخريطة عند تغيّر حجم الشاشة ---------- */
+  window.addEventListener('resize', () => {
+    map.invalidateSize()
+  })
+
   /* ---------- تصحيح النقر عند دوران الخريطة ----------
      تحويل نقطة الشاشة إلى نقطة حاوية غير مدوّرة (لإسقاط الدبابيس) */
   function unrotatePoint(p) {
@@ -195,6 +246,9 @@
   }
 
   /* ---------- التشغيل ---------- */
+  patchDragRotation()
+  map.invalidateSize() // تأكد من قياس الحاوية الكبيرة 150vmax
+  syncInertia()
   tick()
 
   window.__ROTATE__ = {

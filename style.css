@@ -32,6 +32,32 @@ body {
   font-family: inherit;
 }
 
+/* ---------- حاوية الخريطة: 150vmax مربعة وموسّطة ----------
+   أكبر بكثير من الشاشة (≥ قطر الشاشة) حتى لا تظهر زوايا فارغة
+   عند دوران الخريطة 45°/90° — تُوسّط بهامش سالب (بدون transform)
+   حتى تبقى تحكمات Leaflet قابلة للتثبيت على الشاشة */
+.map-canvas {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 150vmax;
+  height: 150vmax;
+  margin-left: -75vmax;
+  margin-top: -75vmax;
+  z-index: 0;
+}
+
+/* ---------- تحكمات Leaflet (تكبير/حقوق): مثبتة على الشاشة ----------
+   الحاوية الآن 150vmax فزواياها خارج الشاشة — نثبّت التحكمات
+   على زوايا الشاشة المرئية بدلاً من زوايا الحاوية */
+.leaflet-control-container .leaflet-top,
+.leaflet-control-container .leaflet-bottom,
+.leaflet-control-container .leaflet-left,
+.leaflet-control-container .leaflet-right {
+  position: fixed !important;
+  z-index: 1000;
+}
+
 /* ---------- شريط الحقوق (Attribution) — داكن وصغير ---------- */
 .leaflet-control-attribution {
   background: rgba(10, 15, 26, 0.85) !important;
@@ -1240,13 +1266,13 @@ body {
 
 /* ---------- تعويضات تموضعات (CSS مخصص — لا تعتمد على Tailwind) ---------- */
 .logo-top {
-  padding-top: max(0.5rem, env(safe-area-inset-top));
+  padding-top: max(0.75rem, env(safe-area-inset-top)); /* 12px من الأعلى */
 }
 .logo-chip {
   background: rgba(13, 21, 38, 0.8);
 }
 .hud-top {
-  top: 4.5rem;
+  top: 72px; /* مباشرة تحت شريط البحث */
 }
 .search-dock {
   bottom: max(6.5rem, calc(env(safe-area-inset-bottom) + 5.5rem));
@@ -1334,6 +1360,30 @@ body {
 }
 .top-search .search-input {
   height: 40px;
+}
+
+/* ---------- الشعار المصغّر داخل الشريط ---------- */
+.logo-mini {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 17px;
+  user-select: none;
+}
+
+/* ---------- البوصلة المصغّرة داخل الشريط ---------- */
+.compass-mini {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+}
+.compass-mini svg {
+  width: 38px;
+  height: 38px;
 }
 
 /* ---------- البوصلة التفاعلية ---------- */
