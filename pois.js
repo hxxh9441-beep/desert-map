@@ -1,0 +1,247 @@
+/* ═══════════════════════════════════════════════════════════════
+   خارطة البر — نظام نقاط الاهتمام POIs (المرحلة 6)
+   مخصصة (ضغطة طويلة + wild_pois) · جاهزة (pois_data.json) · طبقة قابلة للتبديل
+   ═══════════════════════════════════════════════════════════════ */
+(() => {
+  'use strict'
+
+  const map = window.__MAP__
+
+  /* ---------- تعريف الأنواع ---------- */
+  const POI_TYPES = {
+    camp: { icon: '⛺', color: '#F59E0B', label: 'مخيم' },
+    water: { icon: '💧', color: '#06B6D4', label: 'ماء/بئر' },
+    danger: { icon: '⚠️', color: '#EF4444', label: 'خطر/وعر' },
+    landmark: { icon: '📍', color: '#8B5CF6', label: 'معلم' },
+  }
+
+  // فئات النقاط الجاهزة
+  const POI_CATS = {
+    rawda: { icon: '🌿', color: '#22C55E', label: 'روضة' },
+    fiyadh: { icon: '🌾', color: '#84CC16', label: 'فياض' },
+    shaeb: { icon: '🏞️', color: '#3B82F6', label: 'شعيب' },
+    well: { icon: '💧', color: '#06B6D4', label: 'بئر' },
+    landmark: { icon: '🏔️', color: '#8B5CF6', label: 'معلم' },
+  }
+
+  /* ---------- عناصر الواجهة ---------- */
+  const poiModal = document.getElementById('poiModal')
+  const poiTypeGrid = document.getElementById('poiTypeGrid')
+  const poiNameInput = document.getElementById('poiName')
+  const poiNoteInput = document.getElementById('poiNote')
+  const poiSaveBtn = document.getElementById('poiSaveBtn')
+  const poiCancelBtn = document.getElementById('poiCancelBtn')
+  const poisToggle = document.getElementById('poisToggle')
+
+  /* ---------- الحالة ---------- */
+  let customGroup = null // L.LayerGroup للنقاط المخصصة
+  let preloadedGroup = null // L.LayerGroup للنقاط الجاهزة
+  let poiPickLatLng = null // مكان الضغطة الطويلة
+  let selectedType = 'landmark'
+
+  /* ---------- الأيقونات ---------- */
+  function poiIcon(icon, color) {
+    return L.divIcon({
+      className: 'poi-marker-wrap',
+      html: `<div class="poi-marker" style="--poi-color:${color}">${icon}</div>`,
+      iconSize: [34, 34],
+      iconAnchor: [17, 17],
+      popupAnchor: [0, -18],
+    })
+  }
+
+  /* ---------- عرض النقاط المخصصة ---------- */
+  function renderCustomPois() {
+    if (customGroup) map.removeLayer(customGroup)
+    customGroup = L.layerGroup().addTo(map)
+    Store.getPois().forEach((p) => {
+      const def = POI_TYPES[p.type] || POI_TYPES.landmark
+      const m = L.marker([p.lat, p.lng], { icon: poiIcon(def.icon, def.color) })
+        .bindPopup(
+          `<div class="poi-popup">
+            <p class="poi-popup-title">${def.icon} ${escapeHtml(p.name)}</p>
+            ${p.note ? `<p class="poi-popup-note">${escapeHtml(p.note)}</p>` : ''}
+            <p class="poi-popup-meta">${Utils.toDMS(p.lat, p.lng)}</p>
+            <div class="poi-popup-actions">
+              <button class="poi-popup-btn" data-nav-target="1" data-name="${encodeURIComponent(p.name)}" data-lat="${p.lat}" data-lng="${p.lng}">🧭 التوجه</button>
+              <button class="poi-popup-btn poi-popup-del" data-poi-del="${p.id}">🗑️ حذف</button>
+            </div>
+          </div>`
+        )
+      m._poiId = p.id
+      m._poiCustom = true
+      customGroup.addLayer(m)
+    })
+  }
+
+  /* ---------- عرض النقاط الجاهزة ---------- */
+  function renderPreloadedPois(data) {
+    if (preloadedGroup) map.removeLayer(preloadedGroup)
+    preloadedGroup = L.layerGroup().addTo(map)
+    ;(data.pois || []).forEach((p) => {
+      const def = POI_CATS[p.cat] || POI_CATS.landmark
+      const m = L.marker([p.lat, p.lng], { icon: poiIcon(def.icon, def.color) })
+        .bindPopup(
+          `<div class="poi-popup">
+            <p class="poi-popup-title">${def.icon} ${escapeHtml(p.name)}</p>
+            <p class="poi-popup-meta">${def.label} · ${Utils.toDMS(p.lat, p.lng)}</p>
+            ${p.note ? `<p class="poi-popup-note">${escapeHtml(p.note)}</p>` : ''}
+            <div class="poi-popup-actions">
+              <button class="poi-popup-btn" data-nav-target="1" data-name="${encodeURIComponent(p.name)}" data-lat="${p.lat}" data-lng="${p.lng}">🧭 التوجه</button>
+            </div>
+          </div>`
+        )
+      m._poiId = `pre-${p.name}`
+      m._poiCustom = false
+      preloadedGroup.addLayer(m)
+    })
+  }
+
+  function loadPreloaded() {
+    fetch('pois_data.json')
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('network'))))
+      .then((data) => renderPreloadedPois(data))
+      .catch(() => {
+        // بدون إنترنت — النقاط الجاهزة غير متاحة، نكتفي بالمخصصة
+      })
+  }
+
+  /* ---------- إظهار/إخفاء طبقة النقاط ---------- */
+  function togglePois(on) {
+    if (customGroup) {
+      if (on) map.addLayer(customGroup)
+      else map.removeLayer(customGroup)
+    }
+    if (preloadedGroup) {
+      if (on) map.addLayer(preloadedGroup)
+      else map.removeLayer(preloadedGroup)
+    }
+  }
+
+  poisToggle.addEventListener('change', () => togglePois(poisToggle.checked))
+
+  /* ---------- مودال إضافة نقطة ---------- */
+  function openPoiPicker(latlng) {
+    poiPickLatLng = latlng
+    selectedType = 'landmark'
+    poiNameInput.value = ''
+    poiNoteInput.value = ''
+    poiModal.classList.add('open')
+    updateTypeSelection()
+    setTimeout(() => poiNameInput.focus(), 60)
+  }
+
+  function closePoiPicker() {
+    poiModal.classList.remove('open')
+    poiPickLatLng = null
+  }
+
+  function updateTypeSelection() {
+    poiTypeGrid.querySelectorAll('.poi-type').forEach((b) => {
+      b.classList.toggle('selected', b.dataset.type === selectedType)
+    })
+  }
+
+  poiTypeGrid.addEventListener('click', (e) => {
+    const btn = e.target.closest('.poi-type')
+    if (!btn) return
+    selectedType = btn.dataset.type
+    updateTypeSelection()
+  })
+
+  function savePoi() {
+    if (!poiPickLatLng) return
+    const poi = Store.addPoi({
+      name: poiNameInput.value,
+      note: poiNoteInput.value,
+      type: selectedType,
+      lat: poiPickLatLng.lat,
+      lng: poiPickLatLng.lng,
+    })
+    closePoiPicker()
+    if (poi) {
+      renderCustomPois()
+      const def = POI_TYPES[poi.type] || POI_TYPES.landmark
+      showToast(`${def.icon} تمت إضافة النقطة «${poi.name}»`)
+    } else {
+      showToast('⚠️ تعذر حفظ النقطة')
+    }
+  }
+
+  poiSaveBtn.addEventListener('click', savePoi)
+  poiCancelBtn.addEventListener('click', closePoiPicker)
+  poiModal.addEventListener('click', (e) => {
+    if (e.target === poiModal) closePoiPicker()
+  })
+  poiNameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') savePoi()
+  })
+  poiModal.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePoiPicker()
+  })
+
+  /* ---------- الضغطة الطويلة / الزر الأيمن ---------- */
+  let pressTimer = null
+  let pressLatLng = null
+
+  function clearPress() {
+    clearTimeout(pressTimer)
+    pressTimer = null
+    pressLatLng = null
+  }
+
+  map.on('mousedown touchstart', (e) => {
+    if (e.target !== map) return
+    const te = e.originalEvent
+    if (te.type === 'touchstart' && te.touches && te.touches.length !== 1) return
+    clearPress()
+    pressLatLng = e.latlng
+    pressTimer = setTimeout(() => {
+      openPoiPicker(pressLatLng)
+      clearPress()
+    }, 600)
+  })
+  map.on('mousemove touchmove', clearPress)
+  map.on('mouseup touchend', clearPress)
+  map.on('contextmenu', (e) => {
+    if (e.target !== map) return
+    e.originalEvent.preventDefault()
+    openPoiPicker(e.latlng)
+  })
+
+  /* ---------- حذف نقطة مخصصة من النافذة المنبثقة ---------- */
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-poi-del]')
+    if (!btn) return
+    const id = btn.dataset.poiDel
+    Store.removePoi(id)
+    map.closePopup()
+    renderCustomPois()
+    showToast('🗑️ تم حذف النقطة')
+  })
+
+  /* ---------- أدوات مساعدة ---------- */
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    })[c])
+  }
+
+  /* ---------- التشغيل ---------- */
+  renderCustomPois()
+  loadPreloaded()
+
+  /* ---------- كشف للاختبار ---------- */
+  window.__POIS__ = {
+    renderCustomPois,
+    renderPreloadedPois,
+    togglePois,
+    openPoiPicker,
+    savePoi,
+    POI_TYPES,
+  }
+})()
