@@ -6,7 +6,7 @@
    - الخرائط/الأصول الخارجية: stale-while-revalidate
      (المناطق المعروضة سابقاً تبقى متاحة بدون اتصال)
    ═══════════════════════════════════════════════════════════════ */
-const VERSION = 'wildmap-v14'
+const VERSION = 'wildmap-v15'
 const CORE_CACHE = `${VERSION}-core`
 const TILE_CACHE = `${VERSION}-tiles`
 

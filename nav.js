@@ -156,22 +156,20 @@
     searchResults.innerHTML = ''
   }
 
-  // الانتقال لمكان + ماركر مؤقت
+  // الانتقال لمكان + ماركر مؤقت + بطاقة ثابتة (لا تدور مع الخريطة)
   function flyToPlace(lat, lng, name, zoom) {
     map.setView([lat, lng], Math.max(map.getZoom(), zoom || 16))
     dropTempMarker(lat, lng)
-    const popup = L.popup({ closeButton: true, offset: [0, -12] })
-      .setLatLng([lat, lng])
-      .setContent(
-        `<div class="poi-popup">
-          <p class="poi-popup-title">📍 ${name}</p>
-          <p class="poi-popup-sub">${Utils.toDMS(lat, lng)}</p>
-          <div class="poi-popup-actions">
-            <button class="poi-popup-btn" data-nav-target="1" data-name="${encodeURIComponent(name)}" data-lat="${lat}" data-lng="${lng}">🧭 التوجه للهدف</button>
-          </div>
-        </div>`
-      )
-      .openOn(map)
+    if (window.__PIN_SHEET__) {
+      window.__PIN_SHEET__.open({
+        icon: '📍',
+        title: name,
+        dms: Utils.toDMS(lat, lng),
+        dd: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+        actions: `
+          <button class="pin-sheet-btn pin-sheet-nav" data-nav-target="1" data-name="${encodeURIComponent(name)}" data-lat="${lat}" data-lng="${lng}" type="button">🧭 التوجه للهدف</button>`,
+      })
+    }
   }
 
   // بحث نصي عبر Nominatim (أسماء مدن/أماكن — يدعم العربية)
@@ -294,7 +292,7 @@ DMS: ${Utils.toDMS(lat, lng)}
     showToast(ok ? '📋 تم نسخ الموقع — DD + DMS + روابط' : '⚠️ تعذر النسخ')
   })
 
-  /* ---------- تفويض أحداث التوجيه (من نوافذ POIs المنبثقة) ---------- */
+  /* ---------- تفويض أحداث التوجيه (من بطاقة النقطة الثابتة) ---------- */
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-nav-target]')
     if (!btn) return
@@ -302,7 +300,7 @@ DMS: ${Utils.toDMS(lat, lng)}
     const lat = parseFloat(btn.dataset.lat)
     const lng = parseFloat(btn.dataset.lng)
     if (!isFinite(lat) || !isFinite(lng)) return
-    map.closePopup()
+    if (window.__PIN_SHEET__) window.__PIN_SHEET__.close()
     navigateTo(name, lat, lng)
   })
 

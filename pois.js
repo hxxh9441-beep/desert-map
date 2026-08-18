@@ -36,11 +36,22 @@
   const poiCancelBtn = document.getElementById('poiCancelBtn')
   const poisToggle = document.getElementById('poisToggle')
 
+  /* ---------- بطاقة النقطة الثابتة (Bottom Sheet — خارج الخريطة فلا تدور) ---------- */
+  const pinSheet = document.getElementById('pinSheet')
+  const pinSheetX = document.getElementById('pinSheetX')
+  const pinSheetIcon = document.getElementById('pinSheetIcon')
+  const pinSheetTitle = document.getElementById('pinSheetTitle')
+  const pinSheetSub = document.getElementById('pinSheetSub')
+  const pinSheetDms = document.getElementById('pinSheetDms')
+  const pinSheetDd = document.getElementById('pinSheetDd')
+  const pinSheetActions = document.getElementById('pinSheetActions')
+
   /* ---------- الحالة ---------- */
   let customGroup = null // L.LayerGroup للنقاط المخصصة
   let preloadedGroup = null // L.LayerGroup للنقاط الجاهزة
   let poiPickLatLng = null // مكان الضغطة الطويلة
   let selectedType = 'landmark'
+  let lastDropTime = 0 // حارس: لا تُغلق البطاقة بنقرة تلي إسقاط الدبوس مباشرة
 
   /* ---------- الدبوس المؤقت (Pin Drop) ---------- */
   let pinMarker = null
@@ -61,11 +72,13 @@
     popupAnchor: [0, -40],
   })
 
-  // إسقاط دبوس مؤقت عند موقع ما + فتح بطاقته
+  // إسقاط دبوس مؤقت عند موقع ما + فتح بطاقته الثابتة
   function dropPin(latlng) {
     if (pinMarker) map.removeLayer(pinMarker)
     pinLatLng = latlng
     pinMarker = L.marker([latlng.lat, latlng.lng], { icon: PIN_ICON, zIndexOffset: 950 }).addTo(map)
+    pinMarker.on('click', () => openPinCard(latlng))
+    lastDropTime = Date.now()
     openPinCard(latlng)
   }
 
@@ -77,27 +90,39 @@
     pinLatLng = null
   }
 
-  // بطاقة الدبوس: الإحداثيات DMS + DD وثلاثة إجراءات
+  /* ---------- واجهة البطاقة الثابتة (مشتركة: دبوس + POI + بحث) ----------
+     البطاقة خارج حاوية الخريطة (position: fixed) فتبقى أفقية دائماً */
+  function openPinSheet({ icon = '📍', title, sub = '', dms, dd, actions = '' }) {
+    pinSheetIcon.textContent = icon
+    pinSheetTitle.textContent = title
+    pinSheetSub.classList.toggle('hidden', !sub)
+    pinSheetSub.textContent = sub
+    pinSheetDms.textContent = dms || ''
+    pinSheetDd.textContent = dd || ''
+    pinSheetActions.innerHTML = actions
+    pinSheet.classList.remove('hidden')
+  }
+
+  function closePinSheet(removeTempPin = false) {
+    pinSheet.classList.add('hidden')
+    pinSheetActions.innerHTML = ''
+    if (removeTempPin) removePin()
+  }
+
+  // بطاقة الدبوس المؤقت: الإحداثيات DMS + DD وثلاثة إجراءات
   function openPinCard(latlng) {
-    const lat = latlng.lat
-    const lng = latlng.lng
-    const popup = L.popup({ closeButton: true, offset: [0, -8], className: 'pin-popup-shell' })
-      .setLatLng([lat, lng])
-      .setContent(`
-        <div class="pin-popup">
-          <div class="pin-popup-head">
-            <p class="pin-popup-title">📍 نقطة مخصصة</p>
-            <button class="pin-popup-x" data-pin-del type="button" aria-label="إزالة الدبوس">✕</button>
-          </div>
-          <p class="pin-popup-coord">${Utils.toDMS(lat, lng)}</p>
-          <p class="pin-popup-coord pin-popup-dd">${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
-          <div class="pin-popup-actions">
-            <button class="pin-popup-btn pin-popup-nav" data-pin-nav type="button">🧭 توجّه إلى هنا</button>
-            <button class="pin-popup-btn pin-popup-save" data-pin-save type="button">💾 حفظ النقطة</button>
-            <button class="pin-popup-btn pin-popup-share" data-pin-share type="button">📤 مشاركة</button>
-          </div>
-        </div>`)
-      .openOn(map)
+    openPinSheet({
+      icon: '📍',
+      title: 'نقطة مخصصة',
+      dms: Utils.toDMS(latlng.lat, latlng.lng),
+      dd: `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`,
+      actions: `
+        <button class="pin-sheet-btn pin-sheet-nav" data-pin-nav type="button">🧭 توجّه إلى هنا</button>
+        <div class="pin-sheet-row2">
+          <button class="pin-sheet-btn pin-sheet-save" data-pin-save type="button">💾 حفظ النقطة</button>
+          <button class="pin-sheet-btn pin-sheet-share" data-pin-share type="button">📤 مشاركة</button>
+        </div>`,
+    })
   }
 
   // مشاركة إحداثيات الدبوس (DMS + DD + رابط التطبيق)
@@ -110,15 +135,15 @@ DMS: ${Utils.toDMS(lat, lng)}
 DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
 رابط التطبيق: ${appUrl}`
     const ok = window.Share ? await window.Share.copyText(text) : false
-    map.closePopup()
+    closePinSheet(false)
     showToast(ok ? '📋 تم نسخ الإحداثيات والرابط' : '⚠️ تعذر النسخ')
   }
 
-  /* ---------- تفويض أزرار بطاقة الدبوس ---------- */
+  /* ---------- تفويض أزرار بطاقة النقطة الثابتة ---------- */
   document.addEventListener('click', (e) => {
     const navBtn = e.target.closest('[data-pin-nav]')
     if (navBtn) {
-      map.closePopup()
+      closePinSheet(false)
       if (pinLatLng && window.__NAV__) {
         window.__NAV__.navigateTo('نقطة مخصصة', pinLatLng.lat, pinLatLng.lng)
       }
@@ -126,7 +151,7 @@ DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
     }
     const saveBtn = e.target.closest('[data-pin-save]')
     if (saveBtn) {
-      map.closePopup()
+      closePinSheet(false)
       if (pinLatLng) openPoiPicker(pinLatLng)
       return
     }
@@ -135,12 +160,10 @@ DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
       if (pinLatLng) sharePin(pinLatLng)
       return
     }
-    const delBtn = e.target.closest('[data-pin-del]')
-    if (delBtn) {
-      map.closePopup()
-      removePin()
-    }
   })
+
+  // زر ✕ في البطاقة: إغلاق + إزالة الدبوس المؤقت (إن وُجد)
+  pinSheetX.addEventListener('click', () => closePinSheet(true))
 
   /* ---------- الأيقونات: دبوس SVG + شارة الفئة ---------- */
   function poiIcon(icon, color) {
@@ -167,19 +190,20 @@ DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
     Store.getPois().forEach((p) => {
       const def = POI_TYPES[p.type] || POI_TYPES.landmark
       const m = L.marker([p.lat, p.lng], { icon: poiIcon(def.icon, def.color) })
-        .bindPopup(
-          `<div class="poi-popup">
-            <p class="poi-popup-title">${def.icon} ${escapeHtml(p.name)}</p>
-            ${p.note ? `<p class="poi-popup-note">${escapeHtml(p.note)}</p>` : ''}
-            <p class="poi-popup-meta">${Utils.toDMS(p.lat, p.lng)}</p>
-            <div class="poi-popup-actions">
-              <button class="poi-popup-btn" data-nav-target="1" data-name="${encodeURIComponent(p.name)}" data-lat="${p.lat}" data-lng="${p.lng}">🧭 التوجه</button>
-              <button class="poi-popup-btn poi-popup-del" data-poi-del="${p.id}">🗑️ حذف</button>
-            </div>
-          </div>`
-        )
       m._poiId = p.id
       m._poiCustom = true
+      m.on('click', () =>
+        openPinSheet({
+          icon: def.icon,
+          title: p.name || 'نقطة مخصصة',
+          sub: p.note || '',
+          dms: Utils.toDMS(p.lat, p.lng),
+          dd: `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`,
+          actions: `
+            <button class="pin-sheet-btn pin-sheet-nav" data-nav-target="1" data-name="${encodeURIComponent(p.name || 'نقطة')}" data-lat="${p.lat}" data-lng="${p.lng}" type="button">🧭 التوجه</button>
+            <button class="pin-sheet-btn pin-sheet-del" data-poi-del="${p.id}" type="button">🗑️ حذف النقطة</button>`,
+        })
+      )
       customGroup.addLayer(m)
     })
   }
@@ -191,18 +215,19 @@ DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
     ;(data.pois || []).forEach((p) => {
       const def = POI_CATS[p.cat] || POI_CATS.rawda
       const m = L.marker([p.lat, p.lng], { icon: poiIcon(def.icon, def.color) })
-        .bindPopup(
-          `<div class="poi-popup">
-            <p class="poi-popup-title">${def.icon} ${escapeHtml(p.name)}</p>
-            <p class="poi-popup-meta">${def.label} · ${Utils.toDMS(p.lat, p.lng)}</p>
-            ${p.note ? `<p class="poi-popup-note">${escapeHtml(p.note)}</p>` : ''}
-            <div class="poi-popup-actions">
-              <button class="poi-popup-btn" data-nav-target="1" data-name="${encodeURIComponent(p.name)}" data-lat="${p.lat}" data-lng="${p.lng}">🧭 التوجه</button>
-            </div>
-          </div>`
-        )
       m._poiId = `pre-${p.name}`
       m._poiCustom = false
+      m.on('click', () =>
+        openPinSheet({
+          icon: def.icon,
+          title: p.name,
+          sub: def.label,
+          dms: Utils.toDMS(p.lat, p.lng),
+          dd: `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`,
+          actions: `
+            <button class="pin-sheet-btn pin-sheet-nav" data-nav-target="1" data-name="${encodeURIComponent(p.name)}" data-lat="${p.lat}" data-lng="${p.lng}" type="button">🧭 التوجه</button>`,
+        })
+      )
       preloadedGroup.addLayer(m)
     })
   }
@@ -327,15 +352,24 @@ DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
     dropPin(correctedLatLng(e))
   })
 
-  /* ---------- حذف نقطة مخصصة من النافذة المنبثقة ---------- */
+  /* ---------- حذف نقطة مخصصة من البطاقة الثابتة ---------- */
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-poi-del]')
     if (!btn) return
     const id = btn.dataset.poiDel
     Store.removePoi(id)
-    map.closePopup()
+    closePinSheet(false)
     renderCustomPois()
     showToast('🗑️ تم حذف النقطة')
+  })
+
+  /* ---------- إغلاق البطاقة عند النقر على الخريطة نفسها ----------
+     (نقرة على دبوس تفتح بطاقته ولا تُغلق شيئاً — e.target ليس الخريطة)
+     مع حارس: النقرة التي تلي إسقاط الدبوس مباشرة لا تُغلق البطاقة */
+  map.on('click', (e) => {
+    if (e.target !== map) return
+    if (Date.now() - lastDropTime < 800) return
+    closePinSheet(false)
   })
 
   /* ---------- أدوات مساعدة ---------- */
@@ -363,5 +397,14 @@ DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
     dropPin,
     removePin,
     POI_TYPES,
+    openPinSheet,
+    closePinSheet,
+  }
+
+  /* ---------- بطاقة النقطة المشتركة (يستخدمها nav.js للبحث أيضاً) ---------- */
+  window.__PIN_SHEET__ = {
+    open: openPinSheet,
+    close: () => closePinSheet(false),
+    isOpen: () => !pinSheet.classList.contains('hidden'),
   }
 })()

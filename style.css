@@ -638,13 +638,17 @@ body {
    المرحلة 3 — مودال الحفظ · لوحة المسارات · التوست
    ═══════════════════════════════════════════════════════════════ */
 
-/* ---------- الدبوس المؤقت (Pin Drop) ---------- */
+/* ---------- الدبوس المؤقت (Pin Drop) ----------
+   rotate عكسي للدوران الحالي للخريطة (--map-rotation متوارث من لوحة
+   الخريطة) كي يبقى الدبوس قائماً في كل زاوية؛ محور الدوران عند سنّ
+   الدبوس (نقطة الارتكاز 50% 92%) فلا ينزاح عن مكان الإسقاط */
 .pin-drop {
   width: 40px;
   height: 48px;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55));
   animation: pin-drop 0.4s cubic-bezier(0.2, 1.4, 0.4, 1);
-  transform-origin: 50% 0%;
+  transform-origin: 50% 92%;
+  rotate: calc(-1 * var(--map-rotation, 0deg));
 }
 @keyframes pin-drop {
   0% {
@@ -660,111 +664,180 @@ body {
   }
 }
 
-/* ---------- بطاقة الدبوس (نافذة منبثقة) ---------- */
-.pin-popup-shell .leaflet-popup-content-wrapper {
-  border-radius: 16px;
-  padding: 0;
-}
-.pin-popup {
+/* ---------- بطاقة النقطة الثابتة (Bottom Sheet — لا تدور مع الخريطة) ----------
+   خارج حاوية الخريطة المدوّرة: زجاجية داكنة، تبقى أفقية في كل الزوايا */
+.pin-sheet {
+  position: fixed;
+  bottom: 80px;
+  left: 16px;
+  right: 16px;
+  z-index: 1200;
+  max-width: 420px;
+  margin-inline: auto;
   direction: rtl;
   text-align: right;
-  min-width: 210px;
+  background: rgba(15, 23, 42, 0.9);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  backdrop-filter: blur(12px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 14px 16px 16px;
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(6, 182, 212, 0.06);
+  animation: pin-sheet-up 0.28s cubic-bezier(0.2, 1.2, 0.4, 1);
   font-family: inherit;
 }
-.pin-popup-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+@keyframes pin-sheet-up {
+  from {
+    transform: translateY(18px);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
-.pin-popup-title {
-  font-size: 14px;
-  font-weight: 800;
-  color: #0f172a;
-}
-.pin-popup-x {
+.pin-sheet-x {
+  position: absolute;
+  top: 10px;
+  left: 10px;
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 10px;
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  background: rgba(15, 23, 42, 0.05);
-  color: #475569;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.12s ease;
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease,
+    color 0.15s ease;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
-.pin-popup-x:active {
+.pin-sheet-x:active {
   transform: scale(0.9);
 }
-.pin-popup-x:hover {
-  background: rgba(239, 68, 68, 0.12);
-  color: #dc2626;
+.pin-sheet-x:hover {
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
 }
-.pin-popup-coord {
-  margin-top: 4px;
+.pin-sheet-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding-left: 40px; /* لا تتداخل مع زر ✕ */
+}
+.pin-sheet-icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.18), rgba(139, 92, 246, 0.18));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 22px;
+}
+.pin-sheet-info {
+  min-width: 0;
+  flex: 1;
+}
+.pin-sheet-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #f1f5f9;
+  line-height: 1.35;
+  word-break: break-word;
+}
+.pin-sheet-sub {
+  margin-top: 2px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #7dd3fc;
+}
+.pin-sheet-coord {
+  margin-top: 5px;
   font-size: 11.5px;
   font-weight: 700;
-  color: #334155;
+  color: #cbd5e1;
   direction: ltr;
   text-align: left;
   font-variant-numeric: tabular-nums;
-  background: rgba(15, 23, 42, 0.05);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
   padding: 4px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.pin-popup-coord.pin-popup-dd {
-  margin-top: 3px;
+.pin-sheet-coord.pin-sheet-dd {
+  margin-top: 4px;
   color: #64748b;
   font-weight: 600;
   background: transparent;
+  border: none;
   padding: 0 4px;
 }
-.pin-popup-actions {
+.pin-sheet-actions {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 12px;
 }
-.pin-popup-btn {
+.pin-sheet-row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.pin-sheet-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 42px;
+  min-height: 44px;
   border-radius: 12px;
   border: none;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  transition: filter 0.15s ease, transform 0.12s ease;
+  transition:
+    filter 0.15s ease,
+    transform 0.12s ease;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
-.pin-popup-btn:active {
+.pin-sheet-btn:active {
   transform: scale(0.97);
 }
-.pin-popup-btn:hover {
+.pin-sheet-btn:hover {
   filter: brightness(1.08);
 }
-.pin-popup-nav {
+.pin-sheet-nav {
   background: linear-gradient(135deg, #06b6d4, #3b82f6);
   color: #fff;
   box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
 }
-.pin-popup-save {
+.pin-sheet-save {
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: #fff;
   box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
 }
-.pin-popup-share {
-  background: rgba(15, 23, 42, 0.07);
-  color: #1e293b;
-  border: 1px solid rgba(15, 23, 42, 0.15);
+.pin-sheet-share {
+  background: rgba(255, 255, 255, 0.07);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.pin-sheet-del {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
 /* ---------- شريط الهدف (وضع الملاحة البرية) — نيون سيان ---------- */
@@ -1438,6 +1511,9 @@ body {
   width: 36px;
   height: 44px;
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5));
+  /* تدوير عكسي كي يبقى دبوس النقطة قائماً مهما دارت الخريطة */
+  transform-origin: 50% 91%;
+  rotate: calc(-1 * var(--map-rotation, 0deg));
 }
 .poi-marker-svg svg {
   display: block;

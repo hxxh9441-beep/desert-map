@@ -172,6 +172,23 @@
       </button>
     </div>
 
+    <!-- ═══════════ بطاقة النقطة الثابتة (Bottom Sheet — لا تدور مع الخريطة) ═══════════
+         خارج حاوية الخريطة تماماً: تبقى أفقية في كل زوايا الدوران.
+         تُستخدم للدبوس المؤقت ونقاط POI ونتائج البحث -->
+    <div id="pinSheet" class="pin-sheet hidden" role="dialog" aria-label="النقطة" aria-live="polite">
+      <button id="pinSheetX" class="pin-sheet-x" type="button" aria-label="إغلاق" title="إغلاق">✕</button>
+      <div class="pin-sheet-row">
+        <span id="pinSheetIcon" class="pin-sheet-icon" aria-hidden="true">📍</span>
+        <div class="pin-sheet-info">
+          <p id="pinSheetTitle" class="pin-sheet-title"></p>
+          <p id="pinSheetSub" class="pin-sheet-sub hidden"></p>
+          <p id="pinSheetDms" class="pin-sheet-coord"></p>
+          <p id="pinSheetDd" class="pin-sheet-coord pin-sheet-dd"></p>
+        </div>
+      </div>
+      <div id="pinSheetActions" class="pin-sheet-actions"></div>
+    </div>
+
     <!-- ═══════════ لوحة تبديل الطبقات (Bottom Sheet) ═══════════ -->
     <div
       id="layerPanel"
