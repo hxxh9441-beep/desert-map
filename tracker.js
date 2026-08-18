@@ -260,7 +260,7 @@
 
   function updateUI() {
     recordBtn.classList.toggle('recording', state.recording)
-    recordLabel.textContent = state.recording ? 'أوقف التسجيل' : 'ابدأ التسجيل'
+    recordLabel.textContent = state.recording ? 'إيقاف التسجيل' : 'تسجيل المسار'
   }
 
   /* ---------- التشغيل/الإيقاف ---------- */

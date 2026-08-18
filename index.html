@@ -35,46 +35,75 @@
     <!-- ═══════════ حاوية الخريطة (ملء الشاشة) ═══════════ -->
     <div id="map" class="absolute inset-0 z-0"></div>
 
-    <!-- ═══════════ الترويسة المصغرة (شعار + زر بحث) ═══════════ -->
+    <!-- ═══════════ الترويسة: شعار + شريط بحث كامل + بوصلة ═══════════ -->
     <header
-      class="pointer-events-none absolute inset-x-0 top-0 z-[1000] flex items-start justify-between logo-top px-3"
+      class="pointer-events-none absolute inset-x-0 top-0 z-[1200] flex items-center gap-2 logo-top px-3"
     >
       <div
-        class="pointer-events-auto logo-chip grid h-11 w-11 place-items-center rounded-2xl border border-white/10 text-xl shadow-lg shadow-black/40 backdrop-blur-md"
+        class="pointer-events-auto logo-chip grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/10 text-xl shadow-lg shadow-black/40 backdrop-blur-md"
         title="خارطة البر"
       >
         🧭
       </div>
-      <!-- زر البحث — في الترويسة (يمين الأعلى تحت الشعار/HUD) -->
-      <button
-        id="searchToggleBtn"
-        class="pointer-events-auto search-fab header-search"
-        type="button"
-        aria-label="بحث عن مكان أو إحداثيات"
-        title="بحث عن مكان أو إحداثيات"
+
+      <!-- شريط البحث العلوي الكامل (أسماء أماكن عربية أو إحداثيات) -->
+      <div
+        id="searchWrap"
+        class="pointer-events-auto search-wrap top-search min-w-0 flex-1"
       >
-        🔍
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input
+          id="coordInput"
+          type="text"
+          inputmode="search"
+          autocomplete="off"
+          placeholder="مكان (الرياض، روضة خريم…) أو إحداثيات"
+          class="search-input"
+        />
+        <button id="coordClearBtn" class="search-act hidden" type="button" aria-label="مسح البحث" title="مسح البحث">✕</button>
+        <button id="coordShareBtn" class="search-act" type="button" aria-label="مشاركة موقعي" title="مشاركة موقعي">📤</button>
+      </div>
+
+      <!-- البوصلة التفاعلية (تدور مع الخريطة — اضغط للشمال) -->
+      <button
+        id="compassBtn"
+        class="pointer-events-auto compass-btn shrink-0"
+        type="button"
+        aria-label="البوصلة — الشمال للأعلى"
+        title="الشمال للأعلى — اضغط لوضع اتجاه السير"
+      >
+        <svg id="compassNeedle" viewBox="0 0 48 48" aria-hidden="true">
+          <circle cx="24" cy="24" r="22" fill="rgba(13,21,38,0.88)" stroke="rgba(255,255,255,0.18)" stroke-width="1.5" />
+          <path d="M24 6.5 L28.6 24 L24 20.8 L19.4 24 Z" fill="#ef4444" />
+          <path d="M24 41.5 L19.4 24 L24 27.2 L28.6 24 Z" fill="#cbd5e1" />
+          <circle cx="24" cy="24" r="3.2" fill="#0f172a" stroke="#7dd3fc" stroke-width="1.6" />
+        </svg>
       </button>
     </header>
 
-    <!-- ═══════════ شريط HUD: السرعة · المسافة · المدة ═══════════ -->
+    <!-- نتائج البحث (تنسدل تحت الترويسة) -->
+    <div id="searchResults" class="search-results top-results hidden"></div>
+    <p id="coordHint" class="coord-hint hidden rounded-lg bg-red-950/80 px-3 py-1 text-[11px] font-semibold text-red-200"></p>
+
+    <!-- ═══════════ شريط HUD: بطاقات زجاجية (سرعة · مسافة · مدة) ═══════════ -->
     <div
       class="pointer-events-none hud-top absolute inset-x-0 z-[1000] flex justify-center px-4"
     >
-      <div
-        class="pointer-events-auto hud-glass grid w-full max-w-sm grid-cols-3 divide-x divide-x-reverse divide-white/10 rounded-2xl border border-white/10 px-2 py-2 shadow-lg shadow-black/30 backdrop-blur-md"
-      >
-        <div class="hud-cell">
+      <div class="pointer-events-auto hud-grid">
+        <div class="hud-card">
+          <span class="hud-label">السرعة</span>
           <span id="hudSpeed" class="hud-value hud-speed">0</span>
-          <span class="hud-label">السرعة كم/س</span>
+          <span class="hud-unit">كم/س</span>
         </div>
-        <div class="hud-cell">
+        <div class="hud-card">
+          <span class="hud-label">المسافة</span>
           <span id="hudDistance" class="hud-value">0.00</span>
-          <span class="hud-label">المسافة كم</span>
+          <span class="hud-unit">كم</span>
         </div>
-        <div class="hud-cell">
-          <span id="hudDuration" class="hud-value hud-duration">00:00:00</span>
+        <div class="hud-card">
           <span class="hud-label">المدة</span>
+          <span id="hudDuration" class="hud-value hud-duration">00:00:00</span>
+          <span class="hud-unit">&nbsp;</span>
         </div>
       </div>
     </div>
@@ -115,32 +144,6 @@
       </div>
     </div>
 
-    <!-- ═══════════ البحث: إحداثيات أو أسماء أماكن (قابل للطي — أسفل الترويسة) ═══════════ -->
-    <div
-      class="search-dock search-dock-top absolute inset-x-0 z-[1500] flex flex-col items-center px-4"
-    >
-      <!-- الشريط الموسّع -->
-      <div
-        id="searchWrap"
-        class="search-wrap hidden"
-      >
-        <span class="search-icon" aria-hidden="true">🔍</span>
-        <input
-          id="coordInput"
-          type="text"
-          inputmode="search"
-          autocomplete="off"
-          placeholder="مكان (الرياض، روضة خريم…) أو إحداثيات DD/DMS"
-          class="search-input"
-        />
-        <button id="coordShareBtn" class="search-act" type="button" aria-label="مشاركة موقعي" title="مشاركة موقعي">📤</button>
-        <button id="searchCloseBtn" class="search-act" type="button" aria-label="إغلاق البحث" title="إغلاق">✖️</button>
-      </div>
-      <p id="coordHint" class="hidden rounded-lg bg-red-950/80 px-3 py-1 text-[11px] font-semibold text-red-200"></p>
-      <!-- نتائج البحث النصي -->
-      <div id="searchResults" class="search-results hidden"></div>
-    </div>
-
     <!-- ═══════════ مودال إضافة نقطة POI ═══════════ -->
     <div
       id="poiModal"
@@ -170,9 +173,9 @@
     <div
       class="absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-[1000] flex justify-center px-4"
     >
-      <button id="recordBtn" class="record-btn" type="button" aria-label="بدء أو إيقاف تسجيل المسار">
+      <button id="recordBtn" class="record-btn" type="button" aria-label="تسجيل المسار — بدء أو إيقاف">
         <span id="recordDot" class="record-dot" aria-hidden="true"></span>
-        <span id="recordLabel">ابدأ التسجيل</span>
+        <span id="recordLabel">تسجيل المسار</span>
       </button>
     </div>
 
@@ -237,8 +240,8 @@
       <!-- طبقة النقاط -->
       <label class="poi-layer-toggle" for="poisToggle">
         <input type="checkbox" id="poisToggle" checked class="sr-only" />
-        <span class="text-base">🏕️</span>
-        <span class="flex-1 text-sm font-semibold text-white">نقاط البر</span>
+        <span class="text-base">🌿</span>
+        <span class="flex-1 text-sm font-semibold text-white">نقاط البر — رياض · آبار · مخيمات</span>
         <span class="switch"><span class="track"></span></span>
       </label>
     </div>
@@ -380,6 +383,8 @@
     <script src="pois.js"></script>
     <!-- ناقل التوجيه والإحداثيات الذكية -->
     <script src="nav.js"></script>
+    <!-- دوران الخريطة + البوصلة -->
+    <script src="compass.js"></script>
     <!-- تسجيل عامل الخدمة (الأوفلاين) -->
     <script>
       if ('serviceWorker' in navigator) {

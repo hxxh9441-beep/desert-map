@@ -134,25 +134,22 @@
   clearTargetBtn.addEventListener('click', () => clearTarget())
 
   /* ---------- البحث: إحداثيات أو أماكن (Nominatim) ---------- */
-  const searchToggleBtn = document.getElementById('searchToggleBtn')
   const searchWrap = document.getElementById('searchWrap')
-  const searchCloseBtn = document.getElementById('searchCloseBtn')
+  const coordClearBtn = document.getElementById('coordClearBtn')
   const searchResults = document.getElementById('searchResults')
 
-  // طي/توسيع شريط البحث
-  function openSearch() {
-    searchWrap.classList.remove('hidden')
-    searchToggleBtn.classList.add('hidden')
-    setTimeout(() => coordInput.focus(), 60)
+  // زر المسح: يظهر عند وجود نص — يفرّغ الحقل ويخفي النتائج
+  function updateClearBtn() {
+    coordClearBtn.classList.toggle('hidden', coordInput.value.length === 0)
   }
-  function closeSearch() {
-    searchWrap.classList.add('hidden')
-    searchToggleBtn.classList.remove('hidden')
+  coordClearBtn.addEventListener('click', () => {
+    coordInput.value = ''
     hideResults()
     coordHint.classList.add('hidden')
-  }
-  searchToggleBtn.addEventListener('click', openSearch)
-  searchCloseBtn.addEventListener('click', closeSearch)
+    updateClearBtn()
+    coordInput.focus()
+  })
+  coordInput.addEventListener('input', updateClearBtn)
 
   function hideResults() {
     searchResults.classList.add('hidden')
@@ -246,7 +243,7 @@
           hideResults()
           flyToPlace(r.lat, r.lng, r.name.split(',')[0])
           coordInput.value = ''
-          closeSearch()
+          updateClearBtn()
         })
       })
     })

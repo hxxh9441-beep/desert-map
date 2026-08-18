@@ -1135,6 +1135,10 @@ body {
 .search-act:hover {
   background: rgba(255, 255, 255, 0.1);
 }
+/* hidden من Tailwind يخسر أمام display:grid — نرفع الخصوصية */
+.search-act.hidden {
+  display: none;
+}
 
 /* ---------- نتائج البحث (Nominatim) ---------- */
 .search-results {
@@ -1259,4 +1263,156 @@ body {
 }
 #importBanner > div {
   background: rgba(13, 21, 38, 0.95);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   دوران الخريطة + البوصلة · بطاقات HUD · البحث العلوي · شارات POI
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ---------- غلاف دوران الخريطة ----------
+   الاستيفاء السلس يتم في compass.js (requestAnimationFrame) —
+   بلا transition حتى لا يتعارض مع التحديثات */
+.map-rotate-wrap {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+/* ---------- بطاقات HUD (مطابقة لأزرار الأدوات الزجاجية) ---------- */
+.hud-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  max-width: 21rem;
+}
+.hud-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-height: 68px;
+  padding: 8px 6px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(13, 21, 38, 0.78));
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+}
+.hud-card .hud-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+.hud-card .hud-value {
+  font-size: 18px;
+  line-height: 1.15;
+}
+.hud-card .hud-speed {
+  font-size: 22px;
+}
+.hud-card .hud-duration {
+  font-size: 14px;
+}
+.hud-unit {
+  font-size: 9px;
+  color: #64748b;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* ---------- شريط البحث العلوي الكامل ---------- */
+.top-search {
+  max-width: none;
+  height: 48px;
+}
+.top-search .search-input {
+  height: 40px;
+}
+
+/* ---------- البوصلة التفاعلية ---------- */
+.compass-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(13, 21, 38, 0.78));
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition:
+    transform 0.12s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.compass-btn:active {
+  transform: scale(0.92);
+}
+.compass-btn svg {
+  width: 44px;
+  height: 44px;
+  transition: transform 0.15s ease-out;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.5));
+}
+.compass-btn.active {
+  border-color: rgba(34, 211, 238, 0.55);
+  box-shadow:
+    0 0 18px rgba(34, 211, 238, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ---------- نتائج البحث العلوية (تنسدل تحت الترويسة) ---------- */
+.search-results.top-results {
+  position: absolute;
+  top: max(4.5rem, calc(env(safe-area-inset-top) + 4rem));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1600;
+  margin-top: 0;
+  width: min(30rem, calc(100vw - 2rem));
+}
+
+/* ---------- تلميح البحث ---------- */
+.coord-hint {
+  position: absolute;
+  top: max(4.5rem, calc(env(safe-area-inset-top) + 4rem));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1600;
+  max-width: calc(100vw - 2rem);
+}
+
+/* ---------- دبابيس POI: SVG + شارة ---------- */
+.poi-marker-svg {
+  position: relative;
+  width: 36px;
+  height: 44px;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5));
+}
+.poi-marker-svg svg {
+  display: block;
+}
+.poi-badge {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 13px;
+  line-height: 1;
+  pointer-events: none;
 }

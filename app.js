@@ -32,6 +32,7 @@
       {
         maxNativeZoom: 19,
         maxZoom: MAX_ZOOM,
+        keepBuffer: 3, // بلاطات إضافية — يغطي دوران الخريطة
         attribution: 'Tiles © Esri — Esri, Maxar, Earthstar Geographics',
       }
     ),
@@ -42,6 +43,7 @@
         {
           maxNativeZoom: 19,
           maxZoom: MAX_ZOOM,
+          keepBuffer: 3,
           attribution: 'Tiles © Esri',
         }
       ),
@@ -50,6 +52,7 @@
         {
           maxNativeZoom: 18,
           maxZoom: MAX_ZOOM,
+          keepBuffer: 3,
           opacity: 0.95,
           attribution: 'Labels © Esri',
         }
@@ -61,6 +64,7 @@
       {
         maxNativeZoom: 20,
         maxZoom: MAX_ZOOM,
+        keepBuffer: 3,
         subdomains: 'abcd',
         attribution: '© OpenStreetMap contributors © CARTO',
       }
@@ -69,6 +73,7 @@
     terrain: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
       maxNativeZoom: 17,
       maxZoom: MAX_ZOOM,
+      keepBuffer: 3,
       subdomains: 'abc',
       attribution:
         'Map data © OpenStreetMap contributors, SRTM | Style: © OpenTopoMap (CC-BY-SA)',
@@ -77,6 +82,7 @@
     night: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       maxNativeZoom: 20,
       maxZoom: MAX_ZOOM,
+      keepBuffer: 3,
       subdomains: 'abcd',
       attribution: '© OpenStreetMap contributors © CARTO',
     }),

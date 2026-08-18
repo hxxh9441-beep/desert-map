@@ -17,13 +17,14 @@
     landmark: { icon: '📍', color: '#8B5CF6', label: 'معلم' },
   }
 
-  // فئات النقاط الجاهزة
+  // فئات النقاط الجاهزة (معالم البر — الرياض · القصيم · حائل)
   const POI_CATS = {
     rawda: { icon: '🌿', color: '#22C55E', label: 'روضة' },
-    fiyadh: { icon: '🌾', color: '#84CC16', label: 'فياض' },
-    shaeb: { icon: '🏞️', color: '#3B82F6', label: 'شعيب' },
-    well: { icon: '💧', color: '#06B6D4', label: 'بئر' },
-    landmark: { icon: '🏔️', color: '#8B5CF6', label: 'معلم' },
+    fiyadh: { icon: '🌿', color: '#84CC16', label: 'فياض' },
+    well: { icon: '💧', color: '#06B6D4', label: 'بئر/منهل' },
+    desert: { icon: '🏜️', color: '#F59E0B', label: 'نفود/صحراء' },
+    camp: { icon: '⛺', color: '#8B5CF6', label: 'مخيم' },
+    mountain: { icon: '⛰️', color: '#64748B', label: 'جبل/معلم' },
   }
 
   /* ---------- عناصر الواجهة ---------- */
@@ -141,14 +142,21 @@ DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
     }
   })
 
-  /* ---------- الأيقونات ---------- */
+  /* ---------- الأيقونات: دبوس SVG + شارة الفئة ---------- */
   function poiIcon(icon, color) {
     return L.divIcon({
       className: 'poi-marker-wrap',
-      html: `<div class="poi-marker" style="--poi-color:${color}">${icon}</div>`,
-      iconSize: [34, 34],
-      iconAnchor: [17, 17],
-      popupAnchor: [0, -18],
+      html: `<div class="poi-marker-svg" style="--poi-color:${color}">
+        <svg viewBox="0 0 36 44" width="36" height="44" aria-hidden="true">
+          <path d="M18 2 C10.5 2 4.5 8 4.5 16 C4.5 27 18 42 18 42 C18 42 31.5 27 31.5 16 C31.5 8 25.5 2 18 2 Z"
+            fill="var(--poi-color)" stroke="#ffffff" stroke-width="1.5"/>
+          <circle cx="18" cy="16" r="9" fill="#0d1526" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+        </svg>
+        <span class="poi-badge">${icon}</span>
+      </div>`,
+      iconSize: [36, 44],
+      iconAnchor: [18, 40],
+      popupAnchor: [0, -36],
     })
   }
 
@@ -181,7 +189,7 @@ DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
     if (preloadedGroup) map.removeLayer(preloadedGroup)
     preloadedGroup = L.layerGroup().addTo(map)
     ;(data.pois || []).forEach((p) => {
-      const def = POI_CATS[p.cat] || POI_CATS.landmark
+      const def = POI_CATS[p.cat] || POI_CATS.rawda
       const m = L.marker([p.lat, p.lng], { icon: poiIcon(def.icon, def.color) })
         .bindPopup(
           `<div class="poi-popup">
@@ -200,7 +208,7 @@ DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
   }
 
   function loadPreloaded() {
-    fetch('pois_data.json')
+    fetch('desert_pois.json')
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error('network'))))
       .then((data) => renderPreloadedPois(data))
       .catch(() => {
@@ -282,7 +290,15 @@ DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
     if (e.key === 'Escape') closePoiPicker()
   })
 
-  /* ---------- الضغطة الطويلة / الزر الأيمن → دبوس مؤقت ---------- */
+  /* ---------- الضغطة الطويلة / الزر الأيمن → دبوس مؤقت ----------
+     عند دوران الخريطة (وضع اتجاه السير) نصحّح النقطة الملموسة */
+  function correctedLatLng(e) {
+    if (!window.__ROTATE__ || Math.abs(window.__ROTATE__.currentDeg() % 360) < 1) return e.latlng
+    const cp = map.mouseEventToContainerPoint(e.originalEvent)
+    const real = window.__ROTATE__.unrotatePoint(cp)
+    return map.containerPointToLatLng(real)
+  }
+
   let pressTimer = null
   let pressLatLng = null
 
@@ -297,7 +313,7 @@ DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
     const te = e.originalEvent
     if (te.type === 'touchstart' && te.touches && te.touches.length !== 1) return
     clearPress()
-    pressLatLng = e.latlng
+    pressLatLng = correctedLatLng(e)
     pressTimer = setTimeout(() => {
       dropPin(pressLatLng)
       clearPress()
@@ -308,7 +324,7 @@ DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
   map.on('contextmenu', (e) => {
     if (e.target !== map) return
     e.originalEvent.preventDefault()
-    dropPin(e.latlng)
+    dropPin(correctedLatLng(e))
   })
 
   /* ---------- حذف نقطة مخصصة من النافذة المنبثقة ---------- */

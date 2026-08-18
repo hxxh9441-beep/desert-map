@@ -6,7 +6,7 @@
    - الخرائط/الأصول الخارجية: stale-while-revalidate
      (المناطق المعروضة سابقاً تبقى متاحة بدون اتصال)
    ═══════════════════════════════════════════════════════════════ */
-const VERSION = 'wildmap-v10'
+const VERSION = 'wildmap-v11'
 const CORE_CACHE = `${VERSION}-core`
 const TILE_CACHE = `${VERSION}-tiles`
 
@@ -24,7 +24,8 @@ const CORE_ASSETS = [
   './share.js',
   './pois.js',
   './nav.js',
-  './pois_data.json',
+  './compass.js',
+  './desert_pois.json',
   './fonts/thmanyah-serif-regular.woff2',
   './fonts/thmanyah-serif-bold.woff2',
   './icons/icon-192.png',
