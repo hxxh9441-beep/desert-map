@@ -32,18 +32,7 @@ body {
 }
 
 /* ───────── الأسطح العائمة: زجاج موحّد ───────── */
-.fab,
-.hud-card,
-.search-wrap,
-.search-results,
-.nav-hud,
-.pin-sheet,
-.layer-sheet,
-#tracksPanel,
-#importBanner > div,
-.toast,
-.toolbar-dock,
-.compass-btn {
+.fab, .search-wrap, .search-results, .nav-hud, .pin-sheet, .layer-sheet, #tracksPanel, #importBanner > div, .toast, .toolbar-dock, .compass-btn {
   background: var(--glass);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
@@ -63,9 +52,7 @@ body {
 .fab {
   border-radius: var(--radius-pill);
 }
-.hud-card,
-.search-wrap,
-.nav-hud {
+.search-wrap, .nav-hud {
   border-radius: var(--radius);
 }
 .compass-btn {
@@ -98,9 +85,7 @@ body {
 }
 
 /* ───────── ألوان النصوص (تعويض فئات Tailwind الرمادية) ───────── */
-.text-white,
-.text-slate-100,
-.text-slate-300 {
+.text-white, .text-slate-300 {
   color: var(--text);
 }
 .text-slate-400,
@@ -395,9 +380,6 @@ body {
 .temp-marker {
   background: var(--route);
   box-shadow: 0 0 0 2px var(--route);
-  border-color: var(--bg);
-}
-.poi-marker {
   border-color: var(--bg);
 }
 
