@@ -61,15 +61,15 @@
         }
       ),
     ]),
-    // شوارع — Carto Voyager (أسماء أماكن عربية واضحة)
+    // شوارع — Esri World Street Map (بلا مفتاح، أسماء عربية/إنجليزية، يصل لزوم 19)
+    // ملاحظة: بلاطات Carto صارت تتطلب مفتاح API وتُظهر "API KEY REQUIRED"
     streets: L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
       {
         maxNativeZoom: 19,
         maxZoom: MAX_ZOOM,
         keepBuffer: 3,
-        subdomains: 'abcd',
-        attribution: '© OpenStreetMap contributors © CARTO',
+        attribution: 'Tiles © Esri — Esri, HERE, Garmin, OpenStreetMap contributors',
       }
     ),
     // تضاريس — OpenTopoMap (ينتهي عند 17 — يتمدد بعده)
@@ -81,14 +81,22 @@
       attribution:
         'Map data © OpenStreetMap contributors, SRTM | Style: © OpenTopoMap (CC-BY-SA)',
     }),
-    // ليلي — Carto Dark Matter
-    night: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxNativeZoom: 19,
-      maxZoom: MAX_ZOOM,
-      keepBuffer: 3,
-      subdomains: 'abcd',
-      attribution: '© OpenStreetMap contributors © CARTO',
-    }),
+    // ليلي — Esri Dark Gray Canvas + طبقة الأسماء (بلا مفتاح؛ ينتهي عند 16 ثم يتمدد)
+    night: L.layerGroup([
+      L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+        {
+          maxNativeZoom: 16,
+          maxZoom: MAX_ZOOM,
+          keepBuffer: 3,
+          attribution: 'Tiles © Esri — Esri, HERE, Garmin, OpenStreetMap contributors',
+        }
+      ),
+      L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+        { maxNativeZoom: 16, maxZoom: MAX_ZOOM, keepBuffer: 3, attribution: 'Labels © Esri' }
+      ),
+    ]),
   }
 
   // الافتراضي: القمر الصناعي (الأفضل للطرق الوعرة والصحاري)
