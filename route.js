@@ -18,14 +18,14 @@
 
   /* ---------- تعليمات الانعطاف بالعربية ---------- */
   const DIR = {
-    left: ['انعطف يسارًا', '⬅️'],
-    right: ['انعطف يمينًا', '➡️'],
-    'slight left': ['انعطف يسارًا قليلًا', '↖️'],
-    'slight right': ['انعطف يمينًا قليلًا', '↗️'],
-    'sharp left': ['انعطف يسارًا بحدة', '↙️'],
-    'sharp right': ['انعطف يمينًا بحدة', '↘️'],
-    uturn: ['استدر للخلف', '↩️'],
-    straight: ['استمر للأمام', '⬆️'],
+    left: ['انعطف يسارًا', 'arrow-left'],
+    right: ['انعطف يمينًا', 'arrow-right'],
+    'slight left': ['انعطف يسارًا قليلًا', 'arrow-up-left'],
+    'slight right': ['انعطف يمينًا قليلًا', 'arrow-up-right'],
+    'sharp left': ['انعطف يسارًا بحدة', 'arrow-down-left'],
+    'sharp right': ['انعطف يمينًا بحدة', 'arrow-down-right'],
+    uturn: ['استدر للخلف', 'undo-2'],
+    straight: ['استمر للأمام', 'arrow-up'],
   }
 
   /** يحوّل خطوة OSRM إلى {text, icon, kind} */
@@ -37,15 +37,15 @@
     const dir = DIR[mod] || DIR.straight
     switch (type) {
       case 'depart':
-        return { kind: 'depart', icon: '🚗', text: `ابدأ السير${step.name ? ' على ' + step.name : ''}` }
+        return { kind: 'depart', icon: 'car', text: `ابدأ السير${step.name ? ' على ' + step.name : ''}` }
       case 'arrive':
-        return { kind: 'arrive', icon: '🏁', text: 'وصلت إلى وجهتك' }
+        return { kind: 'arrive', icon: 'flag', text: 'وصلت إلى وجهتك' }
       case 'roundabout':
       case 'rotary':
       case 'roundabout turn':
         return {
           kind: 'turn',
-          icon: '🔄',
+          icon: 'refresh-cw',
           text: m.exit ? `ادخل الدوّار وخذ المخرج ${m.exit}${name}` : `ادخل الدوّار${name}`,
         }
       case 'fork':
@@ -55,14 +55,14 @@
           text: mod && mod.includes('left') ? `خذ المسار الأيسر${name}` : mod && mod.includes('right') ? `خذ المسار الأيمن${name}` : `استمر${name}`,
         }
       case 'merge':
-        return { kind: 'turn', icon: '🔀', text: `ادمج${name}` }
+        return { kind: 'turn', icon: 'merge', text: `ادمج${name}` }
       case 'on ramp':
         return { kind: 'turn', icon: dir[1], text: `ادخل المنحدر${name}` }
       case 'off ramp':
         return { kind: 'turn', icon: dir[1], text: `اخرج من المنحدر${name}` }
       case 'exit roundabout':
       case 'exit rotary':
-        return { kind: 'turn', icon: '⬆️', text: `اخرج من الدوّار${name}` }
+        return { kind: 'turn', icon: 'arrow-up', text: `اخرج من الدوّار${name}` }
       default:
         // turn / end of road / new name / continue
         return { kind: 'turn', icon: dir[1], text: `${dir[0]}${name}` }
@@ -151,7 +151,7 @@
       const to = [target.lat, target.lng]
       const route = await fetchRoute(from, to)
       window.__FOLLOW__.start({
-        name: `🛣️ ${target.name}`,
+        name: target.name,
         coordinates: route.coords,
         steps: route.steps,
         reroute: { to },

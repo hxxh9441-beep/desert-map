@@ -185,7 +185,7 @@
       class="absolute inset-x-0 top-[9.5rem] z-[1500] hidden justify-center px-4"
     >
       <div class="nav-hud">
-        <span class="nav-hud-icon" aria-hidden="true">🧭</span>
+        <span class="nav-hud-icon" aria-hidden="true"><svg class="i " aria-hidden="true"><use href="#i-compass"/></svg></span>
         <div class="min-w-0 flex-1">
           <p id="targetName" class="nav-hud-name"></p>
           <p class="nav-hud-meta">
@@ -193,7 +193,7 @@
             <span id="targetBearing" class="nav-hud-brg"></span>
           </p>
         </div>
-        <button id="routeBtn" class="nav-hud-x route-btn" type="button" aria-label="احسب طريق سيارة (داخل المدن)" title="طريق سيارة — داخل المدن">🛣️</button>
+        <button id="routeBtn" class="nav-hud-x route-btn" type="button" aria-label="احسب طريق سيارة (داخل المدن)" title="طريق سيارة — داخل المدن"><svg class="i " aria-hidden="true"><use href="#i-route"/></svg></button>
         <button
           id="clearTargetBtn"
           class="nav-hud-x"
@@ -201,7 +201,7 @@
           aria-label="إنهاء الملاحة"
           title="إنهاء الملاحة"
         >
-          ✕
+          <svg class="i " aria-hidden="true"><use href="#i-x"/></svg>
         </button>
       </div>
     </div>
@@ -212,15 +212,15 @@
       class="absolute inset-x-0 top-[9.5rem] z-[1500] justify-center px-4"
     >
       <div class="nav-hud follow-hud">
-        <span id="followIcon" class="nav-hud-icon" aria-hidden="true">🧭</span>
+        <span id="followIcon" class="nav-hud-icon" aria-hidden="true"><svg class="i " aria-hidden="true"><use href="#i-compass"/></svg></span>
         <div class="min-w-0 flex-1">
           <p id="followName" class="nav-hud-name"></p>
           <p id="followStatus" class="nav-hud-meta"></p>
           <p id="followTurn" class="follow-turn hidden"></p>
         </div>
-        <button id="followVoiceBtn" class="nav-hud-x hidden" type="button" aria-label="الصوت" title="تشغيل/كتم التعليمات الصوتية">🔊</button>
-        <button id="followReverseBtn" class="nav-hud-x" type="button" aria-label="عكس الاتجاه" title="عكس الاتجاه">↔</button>
-        <button id="followStopBtn" class="nav-hud-x" type="button" aria-label="إنهاء ملاحة المسار" title="إنهاء">✕</button>
+        <button id="followVoiceBtn" class="nav-hud-x hidden" type="button" aria-label="الصوت" title="تشغيل/كتم التعليمات الصوتية"><svg class="i " aria-hidden="true"><use href="#i-volume-2"/></svg></button>
+        <button id="followReverseBtn" class="nav-hud-x" type="button" aria-label="عكس الاتجاه" title="عكس الاتجاه"><svg class="i " aria-hidden="true"><use href="#i-arrow-left-right"/></svg></button>
+        <button id="followStopBtn" class="nav-hud-x" type="button" aria-label="إنهاء ملاحة المسار" title="إنهاء"><svg class="i " aria-hidden="true"><use href="#i-x"/></svg></button>
       </div>
     </div>
 
@@ -232,13 +232,13 @@
       <div
         class="w-full max-w-sm rounded-3xl border border-white/10 bg-[#0d1526] p-5 shadow-2xl shadow-black/60"
       >
-        <h2 class="text-lg font-bold text-white">📌 إضافة نقطة</h2>
+        <h2 class="modal-title"><svg class="i " aria-hidden="true"><use href="#i-map-pin"/></svg> إضافة نقطة</h2>
         <p class="mt-1 text-xs text-slate-400">اضغط مطولاً على الخريطة أو زر أيمن لإضافة نقطة</p>
         <div id="poiTypeGrid" class="mt-3 grid grid-cols-2 gap-2">
-          <button class="poi-type" data-type="camp" type="button">⛺ مخيم</button>
-          <button class="poi-type" data-type="water" type="button">💧 ماء/بئر</button>
-          <button class="poi-type" data-type="danger" type="button">⚠️ خطر/وعر</button>
-          <button class="poi-type" data-type="landmark" type="button">📍 معلم</button>
+          <button class="poi-type" data-type="camp" type="button"><svg class="i " aria-hidden="true"><use href="#i-tent"/></svg> مخيم</button>
+          <button class="poi-type" data-type="water" type="button"><svg class="i " aria-hidden="true"><use href="#i-droplet"/></svg> ماء/بئر</button>
+          <button class="poi-type" data-type="danger" type="button"><svg class="i " aria-hidden="true"><use href="#i-triangle-alert"/></svg> خطر/وعر</button>
+          <button class="poi-type" data-type="landmark" type="button"><svg class="i " aria-hidden="true"><use href="#i-map-pin"/></svg> معلم</button>
         </div>
         <input id="poiName" class="modal-input mt-3" type="text" placeholder="اسم النقطة (اختياري)" maxlength="60" />
         <input id="poiNote" class="modal-input mt-2" type="text" placeholder="ملاحظة (اختياري)" maxlength="120" />
@@ -267,9 +267,9 @@
          خارج حاوية الخريطة تماماً: تبقى أفقية في كل زوايا الدوران.
          تُستخدم للدبوس المؤقت ونقاط POI ونتائج البحث -->
     <div id="pinSheet" class="pin-sheet hidden" role="dialog" aria-label="النقطة" aria-live="polite">
-      <button id="pinSheetX" class="pin-sheet-x" type="button" aria-label="إغلاق" title="إغلاق">✕</button>
+      <button id="pinSheetX" class="pin-sheet-x" type="button" aria-label="إغلاق" title="إغلاق"><svg class="i " aria-hidden="true"><use href="#i-x"/></svg></button>
       <div class="pin-sheet-row">
-        <span id="pinSheetIcon" class="pin-sheet-icon" aria-hidden="true">📍</span>
+        <span id="pinSheetIcon" class="pin-sheet-icon" aria-hidden="true"><svg class="i " aria-hidden="true"><use href="#i-map-pin"/></svg></span>
         <div class="pin-sheet-info">
           <p id="pinSheetTitle" class="pin-sheet-title"></p>
           <p id="pinSheetSub" class="pin-sheet-sub hidden"></p>
@@ -290,58 +290,58 @@
 
       <label class="layer-option" data-layer="satellite">
         <input type="radio" name="baseLayer" value="satellite" checked class="sr-only" />
-        <span class="option-icon">🛰️</span>
+        <span class="option-icon"><svg class="i " aria-hidden="true"><use href="#i-satellite"/></svg></span>
         <span class="flex-1">
           <span class="block text-sm font-semibold text-white">قمر صناعي</span>
           <span class="block text-[11px] text-slate-400">صورة حقيقية عالية الدقة</span>
         </span>
-        <span class="option-check">✓</span>
+        <span class="option-check"><svg class="i " aria-hidden="true"><use href="#i-check"/></svg></span>
       </label>
 
       <label class="layer-option" data-layer="hybrid">
         <input type="radio" name="baseLayer" value="hybrid" class="sr-only" />
-        <span class="option-icon">🧭</span>
+        <span class="option-icon"><svg class="i " aria-hidden="true"><use href="#i-map-pinned"/></svg></span>
         <span class="flex-1">
           <span class="block text-sm font-semibold text-white">هجين</span>
           <span class="block text-[11px] text-slate-400">قمر صناعي + أسماء المدن والشوارع</span>
         </span>
-        <span class="option-check">✓</span>
+        <span class="option-check"><svg class="i " aria-hidden="true"><use href="#i-check"/></svg></span>
       </label>
 
       <label class="layer-option" data-layer="streets">
         <input type="radio" name="baseLayer" value="streets" class="sr-only" />
-        <span class="option-icon">🏙️</span>
+        <span class="option-icon"><svg class="i " aria-hidden="true"><use href="#i-building-2"/></svg></span>
         <span class="flex-1">
           <span class="block text-sm font-semibold text-white">شوارع</span>
           <span class="block text-[11px] text-slate-400">خريطة OSM — أسماء عربية واضحة</span>
         </span>
-        <span class="option-check">✓</span>
+        <span class="option-check"><svg class="i " aria-hidden="true"><use href="#i-check"/></svg></span>
       </label>
 
       <label class="layer-option" data-layer="terrain">
         <input type="radio" name="baseLayer" value="terrain" class="sr-only" />
-        <span class="option-icon">⛰️</span>
+        <span class="option-icon"><svg class="i " aria-hidden="true"><use href="#i-mountain"/></svg></span>
         <span class="flex-1">
           <span class="block text-sm font-semibold text-white">تضاريس</span>
           <span class="block text-[11px] text-slate-400">كنتور وارتفاعات ومناهل</span>
         </span>
-        <span class="option-check">✓</span>
+        <span class="option-check"><svg class="i " aria-hidden="true"><use href="#i-check"/></svg></span>
       </label>
 
       <label class="layer-option" data-layer="night">
         <input type="radio" name="baseLayer" value="night" class="sr-only" />
-        <span class="option-icon">🌙</span>
+        <span class="option-icon"><svg class="i " aria-hidden="true"><use href="#i-moon"/></svg></span>
         <span class="flex-1">
           <span class="block text-sm font-semibold text-white">ليلي</span>
           <span class="block text-[11px] text-slate-400">وضع داكن — طريق سريع</span>
         </span>
-        <span class="option-check">✓</span>
+        <span class="option-check"><svg class="i " aria-hidden="true"><use href="#i-check"/></svg></span>
       </label>
 
       <!-- طبقة النقاط -->
       <label class="poi-layer-toggle" for="poisToggle">
         <input type="checkbox" id="poisToggle" checked class="sr-only" />
-        <span class="text-base">🌿</span>
+        <span class="poi-toggle-icon"><svg class="i " aria-hidden="true"><use href="#i-trees"/></svg></span>
         <span class="flex-1 text-sm font-semibold text-white">نقاط البر — رياض · آبار · مخيمات</span>
         <span class="switch"><span class="track"></span></span>
       </label>
@@ -349,10 +349,10 @@
       <!-- تحميل المنطقة للأوفلاين -->
       <div class="offline-row">
         <button id="offlineBtn" class="offline-btn" type="button">
-          <span id="offlineLabel">📥 تحميل المنطقة الظاهرة للأوفلاين</span>
+          <span id="offlineLabel"><svg class="i i-sm" aria-hidden="true"><use href="#i-cloud-download"/></svg> تحميل المنطقة الظاهرة للأوفلاين</span>
           <span class="offline-progress hidden"><span id="offlineBar"></span></span>
         </button>
-        <button id="offlineClear" class="offline-clear" type="button" aria-label="حذف الخرائط المحملة" title="حذف الخرائط المحملة">🗑️</button>
+        <button id="offlineClear" class="offline-clear" type="button" aria-label="حذف الخرائط المحملة" title="حذف الخرائط المحملة"><svg class="i " aria-hidden="true"><use href="#i-trash-2"/></svg></button>
       </div>
       <p id="offlineSize" class="px-3 pt-1 text-[11px] text-slate-500"></p>
     </div>
@@ -365,7 +365,7 @@
       <div
         class="w-full max-w-sm rounded-3xl border border-white/10 bg-[#0d1526] p-5 shadow-2xl shadow-black/60"
       >
-        <h2 class="text-lg font-bold text-white">💾 حفظ المسار</h2>
+        <h2 class="modal-title"><svg class="i " aria-hidden="true"><use href="#i-save"/></svg> حفظ المسار</h2>
         <p id="saveModalStats" class="mt-1 text-xs text-slate-400"></p>
 
         <label for="trackName" class="mt-4 block text-sm font-semibold text-slate-300">
@@ -405,14 +405,14 @@
       <div
         class="w-full max-w-sm rounded-3xl border border-white/10 bg-[#0d1526] p-5 shadow-2xl shadow-black/60"
       >
-        <h2 class="text-lg font-bold text-white">📤 مشاركة المسار</h2>
+        <h2 class="modal-title"><svg class="i " aria-hidden="true"><use href="#i-share-2"/></svg> مشاركة المسار</h2>
         <p id="shareModalName" class="mt-1 truncate text-sm font-semibold text-cyan-300"></p>
         <div class="mt-5 flex flex-col gap-3">
           <button id="copyLinkBtn" class="btn-primary" type="button">
-            🔗 نسخ رابط المشاركة
+            <svg class="i " aria-hidden="true"><use href="#i-link-2"/></svg> نسخ رابط المشاركة
           </button>
           <button id="downloadGpxBtn" class="btn-ghost w-full" type="button">
-            ⬇️ تحميل ملف GPX
+            <svg class="i " aria-hidden="true"><use href="#i-download"/></svg> تحميل ملف GPX
           </button>
           <button id="closeShareBtn" class="btn-ghost w-full" type="button">إلغاء</button>
         </div>
@@ -427,15 +427,15 @@
       <div
         class="flex max-w-md items-center gap-3 rounded-2xl border border-cyan-400/30 bg-[#0d1526]/95 px-4 py-3 shadow-2xl shadow-black/50 backdrop-blur-md"
       >
-        <span class="text-xl">🧭</span>
+        <span class="import-icon"><svg class="i " aria-hidden="true"><use href="#i-compass"/></svg></span>
         <div class="min-w-0 flex-1">
           <p class="truncate text-sm font-bold text-white" id="importName"></p>
           <p class="text-[11px] text-slate-400" id="importMeta"></p>
         </div>
         <button id="importSaveBtn" class="btn-primary !min-h-[44px] !rounded-xl px-4 !text-sm" type="button">
-          💾 حفظ
+          <svg class="i " aria-hidden="true"><use href="#i-save"/></svg> حفظ
         </button>
-        <button id="importCloseBtn" class="track-action" type="button" aria-label="إغلاق">✖️</button>
+        <button id="importCloseBtn" class="track-action" type="button" aria-label="إغلاق"><svg class="i " aria-hidden="true"><use href="#i-x"/></svg></button>
       </div>
     </div>
 
@@ -449,7 +449,7 @@
         <div class="flex items-center gap-2">
           <span id="tracksCount" class="text-[11px] text-slate-500"></span>
           <button id="importGpxBtn" class="gpx-btn" type="button" aria-label="استيراد ملف GPX">
-            ⬆️ GPX
+            <svg class="i i-sm" aria-hidden="true"><use href="#i-upload"/></svg> GPX
           </button>
         </div>
       </div>

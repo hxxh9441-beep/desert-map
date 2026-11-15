@@ -45,7 +45,7 @@
   /* ---------- المؤشر على الخريطة ---------- */
   const ICON = L.divIcon({
     className: 'loc-marker-wrap',
-    html: '<div class="target-marker">🚗</div>',
+    html: `<div class="target-marker marker-car">${Utils.icon('car', '')}</div>`,
     iconSize: [36, 36],
     iconAnchor: [18, 18],
   })
@@ -71,8 +71,8 @@
   }
 
   /* ---------- البطاقة ---------- */
-  function navBtn(label, name, lat, lng) {
-    return `<button class="pin-sheet-btn pin-sheet-nav" data-nav-target="1" data-name="${encodeURIComponent(name)}" data-lat="${lat}" data-lng="${lng}" type="button">${label}</button>`
+  function navBtn(ic, label, name, lat, lng) {
+    return `<button class="pin-sheet-btn pin-sheet-nav" data-nav-target="1" data-name="${encodeURIComponent(name)}" data-lat="${lat}" data-lng="${lng}" type="button">${Utils.icon(ic, 'i-sm')} ${label}</button>`
   }
 
   function openSheet() {
@@ -84,18 +84,18 @@
     let actions = ''
     let sub = 'لم تحفظ موقع سيارتك بعد'
     if (c) {
-      actions += navBtn('🧭 التوجه للسيارة', 'سيارتي', c.lat, c.lng)
+      actions += navBtn('compass', 'التوجه للسيارة', 'سيارتي', c.lat, c.lng)
       sub = `حُفظ ${ago(c.createdAt)}`
       if (pos) sub += ` · ${Utils.formatDistance(Utils.haversine([pos.lat, pos.lng], [c.lat, c.lng]))} منك`
     }
-    if (start) actions += navBtn('↩️ العودة لنقطة البداية', 'نقطة البداية', start[0], start[1])
+    if (start) actions += navBtn('undo-2', 'العودة لنقطة البداية', 'نقطة البداية', start[0], start[1])
     actions += `<div class="pin-sheet-row2">
-      <button class="pin-sheet-btn pin-sheet-save" data-car-set type="button">${c ? '📍 تحديث لموقعي' : '💾 احفظ موقعي كسيارة'}</button>
-      ${c ? '<button class="pin-sheet-btn pin-sheet-del" data-car-del type="button">🗑️ حذف</button>' : ''}
+      <button class="pin-sheet-btn pin-sheet-save" data-car-set type="button">${c ? Utils.icon('locate-fixed', 'i-sm') + ' تحديث لموقعي' : Utils.icon('save', 'i-sm') + ' احفظ موقعي كسيارة'}</button>
+      ${c ? '<button class="pin-sheet-btn pin-sheet-del" data-car-del type="button">' + Utils.icon('trash-2', 'i-sm') + ' حذف</button>' : ''}
     </div>`
 
     window.__PIN_SHEET__.open({
-      icon: '🚗',
+      icon: 'car',
       title: 'سيارتي',
       sub,
       dms: c ? Utils.toDMS(c.lat, c.lng) : '',

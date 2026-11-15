@@ -33,7 +33,7 @@
   // مؤشر الهدف على الخريطة
   const TARGET_ICON = L.divIcon({
     className: 'loc-marker-wrap',
-    html: `<div class="target-marker">🎯</div>`,
+    html: `<div class="target-marker marker-target">${Utils.icon('crosshair', '')}</div>`,
     iconSize: [36, 36],
     iconAnchor: [18, 18],
   })
@@ -202,12 +202,12 @@
     dropTempMarker(lat, lng)
     if (window.__PIN_SHEET__) {
       window.__PIN_SHEET__.open({
-        icon: '📍',
+        icon: 'map-pin',
         title: name,
         dms: Utils.toDMS(lat, lng),
         dd: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
         actions: `
-          <button class="pin-sheet-btn pin-sheet-nav" data-nav-target="1" data-name="${encodeURIComponent(name)}" data-lat="${lat}" data-lng="${lng}" type="button">🧭 التوجه للهدف</button>`,
+          <button class="pin-sheet-btn pin-sheet-nav" data-nav-target="1" data-name="${encodeURIComponent(name)}" data-lat="${lat}" data-lng="${lng}" type="button">${Utils.icon('compass', 'i-sm')} التوجه للهدف</button>`,
       })
     }
   }
@@ -258,7 +258,7 @@
     coordHint.classList.add('hidden')
     nominatimSearch(val).then((results) => {
       if (results.length === 0) {
-        coordHint.textContent = '⚠️ ما لقينا المكان — جرّب: الرياض أو 24.7136, 46.6753'
+        coordHint.textContent = 'ما لقينا المكان — جرّب: الرياض أو 24.7136, 46.6753'
         coordHint.classList.remove('hidden')
         hideResults()
         return
@@ -268,7 +268,7 @@
         .map(
           (r, i) => `
           <button class="search-result-item" data-idx="${i}" type="button">
-            <span class="search-result-icon">${r.type === 'city' || r.type === 'town' || r.type === 'village' ? '🏙️' : r.type === 'water' || r.type === 'river' ? '💧' : r.type === 'mountain' || r.type === 'peak' ? '⛰️' : '📍'}</span>
+            <span class="search-result-icon">${Utils.icon(r.type === 'city' || r.type === 'town' || r.type === 'village' ? 'building-2' : r.type === 'water' || r.type === 'river' ? 'droplet' : r.type === 'mountain' || r.type === 'peak' ? 'mountain' : 'map-pin', '')}</span>
             <span class="min-w-0 flex-1 text-right">
               <span class="block truncate text-sm font-semibold text-white">${esc(r.name.split(',').slice(0, 2).join('،'))}</span>
               <span class="block truncate text-[11px] text-slate-400">${Utils.toDMS(r.lat, r.lng)}</span>

@@ -77,10 +77,10 @@
           </p>
         </div>
         <div class="flex gap-1 shrink-0">
-          <button class="track-action" data-act="follow" type="button" aria-label="اتبع هذا المسار">🧭</button>
-          <button class="track-action" data-act="view" type="button" aria-label="عرض المسار">👁️</button>
-          <button class="track-action" data-act="share" type="button" aria-label="مشاركة المسار">📤</button>
-          <button class="track-action" data-act="del" type="button" aria-label="حذف المسار">🗑️</button>
+          <button class="track-action" data-act="follow" type="button" aria-label="اتبع هذا المسار">${Utils.icon('navigation', '')}</button>
+          <button class="track-action" data-act="view" type="button" aria-label="عرض المسار">${Utils.icon('eye', '')}</button>
+          <button class="track-action" data-act="share" type="button" aria-label="مشاركة المسار">${Utils.icon('share-2', '')}</button>
+          <button class="track-action" data-act="del" type="button" aria-label="حذف المسار">${Utils.icon('trash-2', '')}</button>
         </div>`
       tracksList.appendChild(item)
     })

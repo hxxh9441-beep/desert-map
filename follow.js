@@ -59,7 +59,7 @@
     } catch {}
   }
   function renderVoiceBtn() {
-    voiceBtn.textContent = voiceOn ? '🔊' : '🔇'
+    voiceBtn.innerHTML = Utils.icon(voiceOn ? 'volume-2' : 'volume-x', '')
     voiceBtn.classList.toggle('active', voiceOn)
   }
   const roundDist = (m) => (m < 100 ? Math.max(10, Math.round(m / 10) * 10) : Math.round(m / 50) * 50)
@@ -161,7 +161,7 @@
     if (r.dist > limit) {
       st.offTicks++
       const brg = Utils.bearing(p, r.point)
-      iconEl.textContent = '⚠️'
+      iconEl.innerHTML = Utils.icon('triangle-alert', '')
       hud.classList.add('off')
       turnEl.classList.add('hidden')
       statusEl.textContent = `خارج المسار ${Utils.formatDistance(r.dist)} — اتجه ${Math.round(brg)}° ${Utils.cardinalAr(brg)}`
@@ -178,7 +178,7 @@
       st.off = false
       st.offTicks = 0
       hud.classList.remove('off')
-      iconEl.textContent = '🧭'
+      iconEl.innerHTML = Utils.icon('compass', '')
       setLink(null)
       statusEl.textContent = `على المسار · المتبقي ${Utils.formatDistance(remaining)}`
       updateTurn(st.total - remaining)
@@ -203,7 +203,8 @@
       return
     }
     const d = Math.max(0, s.dist - progress)
-    turnEl.textContent = `${s.icon} بعد ${Utils.formatDistance(d)}: ${s.text}`
+    turnEl.innerHTML = Utils.icon(s.icon, 'i-sm')
+    turnEl.appendChild(document.createTextNode(` بعد ${Utils.formatDistance(d)}: ${s.text}`))
     turnEl.classList.remove('hidden')
     if (d <= 60 && !s.near) {
       s.near = s.far = true
@@ -254,7 +255,7 @@
     updateVoiceUi()
     turnEl.classList.add('hidden')
     renderVoiceBtn()
-    nameEl.textContent = `${st.reversed ? '↔ ' : ''}${st.track.name}`
+    nameEl.textContent = st.track.name
     revBtn.classList.toggle('active', st.reversed)
     revBtn.classList.toggle('hidden', !!st.track.reroute) // عكس الاتجاه لا يناسب طرق السيارات
     drawRoute()

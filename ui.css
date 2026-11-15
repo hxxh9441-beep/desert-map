@@ -876,3 +876,231 @@ body:has(#recordBtn.recording) .hud-bar .hud-value:not(.hud-speed) {
     padding: 6px 4px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   المرحلة 4 — باقي المكوّنات (أيقونات SVG بدل الإيموجي)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ───────── أزرار بنص وأيقونة ───────── */
+.btn-primary,
+.btn-ghost,
+.offline-btn,
+.gpx-btn,
+.poi-type {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s1);
+}
+.gpx-btn {
+  min-height: var(--hit);
+  border-radius: var(--radius-sm);
+}
+.offline-btn {
+  flex-wrap: wrap;
+  text-align: center;
+}
+.offline-btn #offlineLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.offline-progress {
+  width: 100%;
+}
+.offline-clear {
+  display: grid;
+  place-items: center;
+  color: var(--text-2);
+}
+.pin-sheet-btn {
+  gap: 8px;
+  min-height: var(--hit);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+.pin-sheet-x {
+  width: var(--hit);
+  height: var(--hit);
+  top: 6px;
+  left: 6px;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-2);
+}
+.pin-sheet-x:hover {
+  background: var(--fill);
+  color: var(--text);
+}
+.pin-sheet-icon {
+  color: var(--text);
+  border-radius: var(--radius-md);
+}
+.pin-sheet-icon .i {
+  width: 24px;
+  height: 24px;
+}
+.track-action {
+  color: var(--text);
+}
+.track-action[data-act='del'] {
+  color: #f2a29a;
+}
+.nav-hud-x {
+  width: var(--hit);
+  height: var(--hit);
+  border-radius: var(--radius-pill);
+}
+.import-icon {
+  display: grid;
+  place-items: center;
+  color: var(--route);
+}
+
+/* ───────── المودالات ───────── */
+.modal-title {
+  display: flex;
+  align-items: center;
+  gap: var(--s1);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--text);
+}
+.poi-type {
+  min-height: 52px;
+  font-weight: 500;
+}
+
+/* ───────── لوحة الخرائط ───────── */
+.layer-option {
+  border-radius: var(--radius-md);
+}
+.option-icon {
+  background: var(--fill);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+}
+.option-check {
+  display: none;
+  color: var(--text);
+}
+.layer-option:has(input:checked) .option-check {
+  display: grid;
+  place-items: center;
+}
+.poi-layer-toggle {
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--glass-border);
+  background: var(--fill);
+}
+.poi-toggle-icon {
+  display: grid;
+  place-items: center;
+  color: var(--text-2);
+}
+.layer-sheet-handle {
+  background: var(--divider);
+}
+
+/* ───────── أشرطة الملاحة ───────── */
+.nav-hud-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-pill);
+  background: var(--fill);
+  color: var(--route);
+}
+.nav-hud-icon .i {
+  width: 20px;
+  height: 20px;
+}
+#followHud.off .nav-hud-icon {
+  color: var(--danger);
+}
+.follow-turn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.follow-turn .i {
+  color: var(--route);
+}
+
+/* ───────── مؤشرات الخريطة: السيارة والهدف ───────── */
+.target-marker {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  font-size: 0;
+  background: var(--bg-sheet);
+  border: 0.5px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-hl), 0 4px 14px rgba(0, 0, 0, 0.5);
+  filter: none;
+  color: var(--text);
+}
+.target-marker .i {
+  width: 22px;
+  height: 22px;
+}
+.marker-target {
+  color: var(--route);
+  border-color: rgba(34, 211, 238, 0.55);
+}
+.marker-car {
+  animation: none;
+}
+.poi-badge {
+  top: 9px;
+  color: #fff;
+  font-size: 0;
+}
+.poi-badge .i {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.2;
+}
+.poi-marker-svg svg circle {
+  fill: rgba(22, 19, 15, 0.9);
+}
+
+/* ───────── نتائج البحث ───────── */
+.search-result-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--fill);
+  color: var(--text-2);
+  flex-shrink: 0;
+}
+.search-result-icon .i {
+  width: 20px;
+  height: 20px;
+}
+.coord-hint {
+  background: var(--bg-sheet);
+  border: 0.5px solid rgba(239, 68, 68, 0.5);
+  color: var(--text);
+  border-radius: var(--radius-md);
+}
+
+/* ───────── مسافات الشبكة وعناصر متفرقة ───────── */
+.layer-sheet {
+  padding: var(--s1) var(--s1) var(--s2);
+}
+.track-item {
+  border-radius: var(--radius-md);
+}
+.track-item:hover {
+  background: var(--fill);
+}
+
+/* الإجراء الثانوي في بطاقة النقطة: زجاجي (اللون المميز للإجراء الرئيسي فقط) */
+.pin-sheet-save {
+  background: var(--fill);
+  color: var(--text);
+  border: 0.5px solid var(--glass-border);
+  box-shadow: none;
+}

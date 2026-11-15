@@ -79,7 +79,9 @@
   }
 
   function setUi(text, pct) {
-    label.textContent = text
+    // الأيقونة تظهر في حالة الخمول فقط؛ أثناء التحميل نص التقدم
+    label.innerHTML = pct == null ? Utils.icon('cloud-download', 'i-sm') + ' ' : ''
+    label.appendChild(document.createTextNode(text))
     bar.style.width = pct == null ? '0%' : pct + '%'
     bar.parentElement.classList.toggle('hidden', pct == null)
   }
@@ -124,7 +126,7 @@
     await Promise.all(Array.from({ length: CONCURRENCY }, worker))
 
     busy = false
-    setUi('📥 تحميل المنطقة الظاهرة للأوفلاين', null)
+    setUi('تحميل المنطقة الظاهرة للأوفلاين', null)
     if (cancelled) toast('⏹️ أُلغي التحميل')
     else if (failed === urls.length) toast('⚠️ فشل التحميل — تحقق من الإنترنت')
     else toast(`✅ تم تحميل ${urls.length - failed} بلاطة (زوم ${plan.z0}–${plan.zMax})${failed ? ` · فشل ${failed}` : ''}`)

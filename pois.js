@@ -11,20 +11,20 @@
 
   /* ---------- تعريف الأنواع ---------- */
   const POI_TYPES = {
-    camp: { icon: '⛺', color: '#F59E0B', label: 'مخيم' },
-    water: { icon: '💧', color: '#06B6D4', label: 'ماء/بئر' },
-    danger: { icon: '⚠️', color: '#EF4444', label: 'خطر/وعر' },
-    landmark: { icon: '📍', color: '#8B5CF6', label: 'معلم' },
+    camp: { icon: 'tent', color: '#F59E0B', label: 'مخيم' },
+    water: { icon: 'droplet', color: '#06B6D4', label: 'ماء/بئر' },
+    danger: { icon: 'triangle-alert', color: '#EF4444', label: 'خطر/وعر' },
+    landmark: { icon: 'map-pin', color: '#8B5CF6', label: 'معلم' },
   }
 
   // فئات النقاط الجاهزة (معالم البر — الرياض · القصيم · حائل)
   const POI_CATS = {
-    rawda: { icon: '🌿', color: '#22C55E', label: 'روضة' },
-    fiyadh: { icon: '🌿', color: '#84CC16', label: 'فياض' },
-    well: { icon: '💧', color: '#06B6D4', label: 'بئر/منهل' },
-    desert: { icon: '🏜️', color: '#F59E0B', label: 'نفود/صحراء' },
-    camp: { icon: '⛺', color: '#8B5CF6', label: 'مخيم' },
-    mountain: { icon: '⛰️', color: '#64748B', label: 'جبل/معلم' },
+    rawda: { icon: 'trees', color: '#22C55E', label: 'روضة' },
+    fiyadh: { icon: 'sprout', color: '#84CC16', label: 'فياض' },
+    well: { icon: 'droplet', color: '#06B6D4', label: 'بئر/منهل' },
+    desert: { icon: 'sun', color: '#F59E0B', label: 'نفود/صحراء' },
+    camp: { icon: 'tent', color: '#8B5CF6', label: 'مخيم' },
+    mountain: { icon: 'mountain', color: '#64748B', label: 'جبل/معلم' },
   }
 
   /* ---------- عناصر الواجهة ---------- */
@@ -92,8 +92,8 @@
 
   /* ---------- واجهة البطاقة الثابتة (مشتركة: دبوس + POI + بحث) ----------
      البطاقة خارج حاوية الخريطة (position: fixed) فتبقى أفقية دائماً */
-  function openPinSheet({ icon = '📍', title, sub = '', dms, dd, actions = '' }) {
-    pinSheetIcon.textContent = icon
+  function openPinSheet({ icon = 'map-pin', title, sub = '', dms, dd, actions = '' }) {
+    pinSheetIcon.innerHTML = Utils.icon(icon)
     pinSheetTitle.textContent = title
     pinSheetSub.classList.toggle('hidden', !sub)
     pinSheetSub.textContent = sub
@@ -112,15 +112,15 @@
   // بطاقة الدبوس المؤقت: الإحداثيات DMS + DD وثلاثة إجراءات
   function openPinCard(latlng) {
     openPinSheet({
-      icon: '📍',
+      icon: 'map-pin',
       title: 'نقطة مخصصة',
       dms: Utils.toDMS(latlng.lat, latlng.lng),
       dd: `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`,
       actions: `
-        <button class="pin-sheet-btn pin-sheet-nav" data-pin-nav type="button">🧭 توجّه إلى هنا</button>
+        <button class="pin-sheet-btn pin-sheet-nav" data-pin-nav type="button">${Utils.icon('compass', 'i-sm')} توجّه إلى هنا</button>
         <div class="pin-sheet-row2">
-          <button class="pin-sheet-btn pin-sheet-save" data-pin-save type="button">💾 حفظ النقطة</button>
-          <button class="pin-sheet-btn pin-sheet-share" data-pin-share type="button">📤 مشاركة</button>
+          <button class="pin-sheet-btn pin-sheet-save" data-pin-save type="button">${Utils.icon('save', 'i-sm')} حفظ النقطة</button>
+          <button class="pin-sheet-btn pin-sheet-share" data-pin-share type="button">${Utils.icon('share-2', 'i-sm')} مشاركة</button>
         </div>`,
     })
   }
@@ -175,7 +175,7 @@ DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
             fill="var(--poi-color)" stroke="#ffffff" stroke-width="1.5"/>
           <circle cx="18" cy="16" r="9" fill="#0d1526" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
         </svg>
-        <span class="poi-badge">${icon}</span>
+        <span class="poi-badge">${Utils.icon(icon, 'i-sm')}</span>
       </div>`,
       iconSize: [36, 44],
       iconAnchor: [18, 40],
@@ -200,8 +200,8 @@ DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
           dms: Utils.toDMS(p.lat, p.lng),
           dd: `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`,
           actions: `
-            <button class="pin-sheet-btn pin-sheet-nav" data-nav-target="1" data-name="${encodeURIComponent(p.name || 'نقطة')}" data-lat="${p.lat}" data-lng="${p.lng}" type="button">🧭 التوجه</button>
-            <button class="pin-sheet-btn pin-sheet-del" data-poi-del="${p.id}" type="button">🗑️ حذف النقطة</button>`,
+            <button class="pin-sheet-btn pin-sheet-nav" data-nav-target="1" data-name="${encodeURIComponent(p.name || 'نقطة')}" data-lat="${p.lat}" data-lng="${p.lng}" type="button">${Utils.icon('compass', 'i-sm')} التوجه</button>
+            <button class="pin-sheet-btn pin-sheet-del" data-poi-del="${p.id}" type="button">${Utils.icon('trash-2', 'i-sm')} حذف النقطة</button>`,
         })
       )
       customGroup.addLayer(m)
@@ -225,7 +225,7 @@ DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
           dms: Utils.toDMS(p.lat, p.lng),
           dd: `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`,
           actions: `
-            <button class="pin-sheet-btn pin-sheet-nav" data-nav-target="1" data-name="${encodeURIComponent(p.name)}" data-lat="${p.lat}" data-lng="${p.lng}" type="button">🧭 التوجه</button>`,
+            <button class="pin-sheet-btn pin-sheet-nav" data-nav-target="1" data-name="${encodeURIComponent(p.name)}" data-lat="${p.lat}" data-lng="${p.lng}" type="button">${Utils.icon('compass', 'i-sm')} التوجه</button>`,
         })
       )
       preloadedGroup.addLayer(m)
@@ -297,7 +297,7 @@ DD: ${lat.toFixed(6)}, ${lng.toFixed(6)}
     if (poi) {
       renderCustomPois()
       const def = POI_TYPES[poi.type] || POI_TYPES.landmark
-      showToast(`${def.icon} تمت إضافة النقطة «${poi.name}»`)
+      showToast(`✅ تمت إضافة النقطة «${poi.name}»`)
     } else {
       showToast('⚠️ تعذر حفظ النقطة')
     }
