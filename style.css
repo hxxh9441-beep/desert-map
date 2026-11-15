@@ -1615,3 +1615,128 @@ body {
 @media (prefers-reduced-motion: reduce) {
   #targetHud.arrived .nav-hud-icon { animation: none; }
 }
+
+.offline-progress.hidden {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   الوضع الأفقي (جوال بوضع landscape — ارتفاع قصير)
+   شريط الأدوات يصير أفقياً أسفل اليسار، والبطاقات/اللوحات قابلة للتمرير
+   ═══════════════════════════════════════════════════════════════ */
+@media (orientation: landscape) and (max-height: 520px) {
+  /* أدوات: صف أفقي بجانب زر التسجيل */
+  .toolbar-dock {
+    flex-direction: row !important;
+    bottom: max(0.75rem, env(safe-area-inset-bottom)) !important;
+    gap: 0.5rem !important;
+  }
+  .toolbar-dock .fab {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+  .leaflet-bottom.leaflet-left {
+    margin: 0 0 5rem 0.75rem;
+  }
+  .record-btn {
+    min-height: 48px;
+    padding: 0 20px;
+    font-size: 14px;
+  }
+
+  /* HUD أصغر وأقرب للأعلى */
+  .hud-top {
+    top: 64px;
+  }
+  .hud-grid {
+    max-width: 26rem;
+    gap: 6px;
+  }
+  .hud-card {
+    min-height: 46px;
+    padding: 4px 6px;
+    border-radius: 12px;
+  }
+  .hud-card .hud-value { font-size: 15px; }
+  .hud-card .hud-speed { font-size: 18px; }
+  .hud-card .hud-duration { font-size: 12px; }
+  .hud-card .hud-label,
+  .hud-unit { font-size: 9px; }
+
+  /* أشرطة الهدف/المسار */
+  #targetHud,
+  #followHud {
+    top: 7.4rem;
+  }
+  #targetHud.open ~ #followHud {
+    top: 11rem;
+  }
+  .nav-hud {
+    max-width: 26rem;
+    padding: 6px 10px;
+  }
+
+  /* لوحة الطبقات: تتمرر بدل أن تتجاوز الشاشة */
+  .layer-sheet {
+    bottom: 0.75rem;
+    max-height: calc(100dvh - 5.5rem);
+    overflow-y: auto;
+    width: min(30rem, calc(100vw - 2rem));
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  }
+
+  /* لوحة المسارات */
+  #tracksPanel {
+    bottom: 0.75rem !important;
+    max-height: calc(100dvh - 5.5rem) !important;
+  }
+  #tracksList {
+    max-height: calc(100dvh - 11rem) !important;
+  }
+
+  /* بطاقة النقطة */
+  .pin-sheet {
+    bottom: 0.5rem;
+    max-height: calc(100dvh - 5rem);
+    overflow-y: auto;
+    padding: 10px 14px 12px;
+  }
+
+  /* المودالات */
+  #poiModal > div,
+  #saveModal > div,
+  #shareModal > div {
+    max-height: calc(100dvh - 1.5rem);
+    overflow-y: auto;
+  }
+
+  /* نتائج البحث */
+  .search-results.top-results {
+    max-height: calc(100dvh - 5rem);
+    overflow-y: auto;
+  }
+
+  .layer-sheet,
+  .pin-sheet,
+  #tracksPanel,
+  #tracksList {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  }
+
+  .layer-sheet.open {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    align-content: start;
+  }
+  .layer-sheet.open > :not(.layer-option) {
+    grid-column: 1 / -1;
+    margin-top: 0;
+  }
+  .layer-sheet .layer-option {
+    min-width: 0;
+  }
+}
