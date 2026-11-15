@@ -132,6 +132,22 @@
       </div>
     </div>
 
+    <!-- ═══════════ شريط ملاحة المسار المحفوظ ═══════════ -->
+    <div
+      id="followHud"
+      class="absolute inset-x-0 top-[9.5rem] z-[1500] justify-center px-4"
+    >
+      <div class="nav-hud follow-hud">
+        <span id="followIcon" class="nav-hud-icon" aria-hidden="true">🧭</span>
+        <div class="min-w-0 flex-1">
+          <p id="followName" class="nav-hud-name"></p>
+          <p id="followStatus" class="nav-hud-meta"></p>
+        </div>
+        <button id="followReverseBtn" class="nav-hud-x" type="button" aria-label="عكس الاتجاه" title="عكس الاتجاه">↔</button>
+        <button id="followStopBtn" class="nav-hud-x" type="button" aria-label="إنهاء ملاحة المسار" title="إنهاء">✕</button>
+      </div>
+    </div>
+
     <!-- ═══════════ مودال إضافة نقطة POI ═══════════ -->
     <div
       id="poiModal"
@@ -403,6 +419,8 @@
     <script src="offline.js"></script>
     <!-- موقع السيارة + العودة للبداية -->
     <script src="car.js"></script>
+    <!-- ملاحة المسار المحفوظ + تنبيه الابتعاد -->
+    <script src="follow.js"></script>
     <!-- تسجيل عامل الخدمة (الأوفلاين) -->
     <script>
       if ('serviceWorker' in navigator) {

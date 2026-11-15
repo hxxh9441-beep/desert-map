@@ -74,6 +74,7 @@
           </p>
         </div>
         <div class="flex gap-1 shrink-0">
+          <button class="track-action" data-act="follow" type="button" aria-label="اتبع هذا المسار">🧭</button>
           <button class="track-action" data-act="view" type="button" aria-label="عرض المسار">👁️</button>
           <button class="track-action" data-act="share" type="button" aria-label="مشاركة المسار">📤</button>
           <button class="track-action" data-act="del" type="button" aria-label="حذف المسار">🗑️</button>
@@ -251,6 +252,13 @@
     if (!item) return
     const id = item.dataset.id
     if (btn.dataset.act === 'view') viewTrack(id)
+    else if (btn.dataset.act === 'follow') {
+      const track = Store.getTrack(id)
+      if (track && window.__FOLLOW__) {
+        setPanel(false)
+        window.__FOLLOW__.start(track)
+      }
+    }
     else if (btn.dataset.act === 'share') {
       const track = Store.getTrack(id)
       if (track && window.Share) window.Share.openShareModal(track)

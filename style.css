@@ -1572,3 +1572,29 @@ body {
   background: #7dd3fc;
   transition: width 0.15s linear;
 }
+
+/* ═══════════ ملاحة المسار المحفوظ ═══════════ */
+#followHud {
+  display: none;
+}
+#followHud.open {
+  display: flex;
+}
+#targetHud.open ~ #followHud {
+  top: 13.5rem;
+}
+.follow-hud {
+  border-color: rgba(251, 191, 36, 0.5);
+  box-shadow:
+    0 0 24px rgba(251, 191, 36, 0.18),
+    0 12px 32px rgba(0, 0, 0, 0.5);
+}
+#followHud.off .follow-hud {
+  border-color: rgba(239, 68, 68, 0.85);
+  box-shadow:
+    0 0 28px rgba(239, 68, 68, 0.4),
+    0 12px 32px rgba(0, 0, 0, 0.5);
+}
+.nav-hud-x.active {
+  background: rgba(251, 191, 36, 0.25);
+}
