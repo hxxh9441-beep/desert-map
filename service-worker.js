@@ -2,11 +2,11 @@
    خارطة البر — عامل الخدمة (المرحلة 4: أوفلاين)
    استراتيجية:
    - التخزين المسبق: الملفات الأساسية (تطبيق كامل بدون شبكة)
-   - نفس الأصل: cache-first مع تحديث في الخلفية
-   - الخرائط/الأصول الخارجية: stale-while-revalidate
+   - نفس الأصل: شبكة أولاً ثم الكاش (تحديث فوري + أوفلاين)
+   - البلاطات الخارجية: كاش أولاً + تحديث خلفي (حد 1500 بلاطة)
      (المناطق المعروضة سابقاً تبقى متاحة بدون اتصال)
    ═══════════════════════════════════════════════════════════════ */
-const VERSION = 'wildmap-v16'
+const VERSION = 'wildmap-v17'
 const CORE_CACHE = `${VERSION}-core`
 const TILE_CACHE = `${VERSION}-tiles`
 
@@ -34,8 +34,13 @@ const CORE_ASSETS = [
   './icons/apple-touch-icon.png',
   './icons/favicon-32.png',
   './icons/favicon-64.png',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+  './vendor/leaflet/leaflet.css',
+  './vendor/leaflet/leaflet.js',
+  './vendor/leaflet/images/marker-icon.png',
+  './vendor/leaflet/images/marker-icon-2x.png',
+  './vendor/leaflet/images/marker-shadow.png',
+  './vendor/leaflet/images/layers.png',
+  './vendor/leaflet/images/layers-2x.png',
 ]
 
 /* ---------- التثبيت: تخزين مسبق ---------- */
@@ -64,40 +69,47 @@ self.addEventListener('activate', (event) => {
   )
 })
 
+/* ---------- حد كاش البلاطات (الأقدم يُحذف أولاً) ---------- */
+const MAX_TILES = 1500
+async function trimTiles() {
+  const cache = await caches.open(TILE_CACHE)
+  const keys = await cache.keys()
+  for (let i = 0; i < keys.length - MAX_TILES; i++) await cache.delete(keys[i])
+}
+
 /* ---------- جلب الطلبات ---------- */
 self.addEventListener('fetch', (event) => {
   const req = event.request
   if (req.method !== 'GET') return
-
   const url = new URL(req.url)
 
-  // ملفات التطبيق (نفس الأصل): cache-first + تحديث خلفي
+  // ملفات التطبيق: شبكة أولاً (تحديث فوري بعد النشر) ثم الكاش أوفلاين
   if (url.origin === self.location.origin) {
     event.respondWith(
-      caches.match(req).then((cached) => {
-        const network = fetch(req)
-          .then((res) => {
-            if (res && res.ok) {
-              const copy = res.clone()
-              caches.open(CORE_CACHE).then((cache) => cache.put(req, copy))
-            }
-            return res
-          })
-          .catch(() => cached)
-        return cached || network
-      })
+      fetch(req)
+        .then((res) => {
+          if (res && res.ok) {
+            const copy = res.clone()
+            caches.open(CORE_CACHE).then((c) => c.put(req, copy))
+          }
+          return res
+        })
+        .catch(() => caches.match(req, { ignoreSearch: true }))
     )
     return
   }
 
-  // الأصول الخارجية (Leaflet + بلاطات الخرائط): stale-while-revalidate
+  // بلاطات الخرائط (خارجية): كاش أولاً + تحديث خلفي + حد أقصى
   event.respondWith(
     caches.match(req).then((cached) => {
       const network = fetch(req)
         .then((res) => {
-          if (res && res.ok) {
+          if (res && (res.ok || res.type === 'opaque')) {
             const copy = res.clone()
-            caches.open(TILE_CACHE).then((cache) => cache.put(req, copy))
+            caches
+              .open(TILE_CACHE)
+              .then((c) => c.put(req, copy))
+              .then(trimTiles)
           }
           return res
         })

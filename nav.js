@@ -173,6 +173,10 @@
   }
 
   // بحث نصي عبر Nominatim (أسماء مدن/أماكن — يدعم العربية)
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+  }
+
   async function nominatimSearch(q) {
     try {
       const url =
@@ -226,7 +230,7 @@
           <button class="search-result-item" data-idx="${i}" type="button">
             <span class="search-result-icon">${r.type === 'city' || r.type === 'town' || r.type === 'village' ? '🏙️' : r.type === 'water' || r.type === 'river' ? '💧' : r.type === 'mountain' || r.type === 'peak' ? '⛰️' : '📍'}</span>
             <span class="min-w-0 flex-1 text-right">
-              <span class="block truncate text-sm font-semibold text-white">${r.name.split(',').slice(0, 2).join('،')}</span>
+              <span class="block truncate text-sm font-semibold text-white">${esc(r.name.split(',').slice(0, 2).join('،'))}</span>
               <span class="block truncate text-[11px] text-slate-400">${Utils.toDMS(r.lat, r.lng)}</span>
             </span>
           </button>`
