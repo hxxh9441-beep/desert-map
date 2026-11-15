@@ -1104,3 +1104,78 @@ body:has(#recordBtn.recording) .hud-bar .hud-value:not(.hud-speed) {
   border: 0.5px solid var(--glass-border);
   box-shadow: none;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   المرحلة 5 — الحركة · الوصولية · الأداء
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ───────── انتقالات موحّدة (cubic-bezier(0.32,0.72,0,1) · 250–350ms) ───────── */
+.layer-sheet {
+  transition:
+    opacity var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+.pin-sheet {
+  animation: sheet-up var(--dur) var(--ease);
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.toast {
+  transition:
+    opacity var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+#poiModal.open > div,
+#saveModal.open > div,
+#shareModal:not(.hidden) > div,
+#shareModal.open > div {
+  animation: modal-in var(--dur) var(--ease);
+}
+@keyframes modal-in {
+  from {
+    transform: translateY(16px) scale(0.97);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* ───────── الأداء: زجاج أخف أثناء التسجيل/القيادة (الخريطة تتحرك باستمرار) ───────── */
+body:has(#recordBtn.recording),
+body:has(#followHud.open),
+body:has(#targetHud.open) {
+  --glass-blur: blur(14px) saturate(160%);
+}
+
+/* ───────── بدائل عند عدم دعم الزجاج أو طلب تقليل الشفافية ───────── */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --glass: var(--bg-sheet);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass: var(--bg-sheet);
+    --glass-blur: none;
+  }
+}
+@media (prefers-contrast: more) {
+  :root {
+    --glass-border: rgba(255, 240, 220, 0.4);
+    --text-2: rgba(242, 232, 216, 0.82);
+    --text-3: rgba(242, 232, 216, 0.62);
+  }
+}
+.modal-input {
+  min-height: var(--hit);
+}
