@@ -148,22 +148,20 @@
     <div id="searchResults" class="search-results top-results hidden"></div>
     <p id="coordHint" class="coord-hint hidden rounded-lg bg-red-950/80 px-3 py-1 text-[11px] font-semibold text-red-200"></p>
 
-    <!-- ═══════════ شريط HUD: بطاقات زجاجية (سرعة · مسافة · مدة) ═══════════ -->
-    <div
-      class="pointer-events-none hud-top absolute inset-x-0 z-[1000] flex justify-center px-4"
-    >
-      <div class="pointer-events-auto hud-grid">
-        <div class="hud-card">
+    <!-- ═══════════ شريط العدادات: زجاج واحد مضغوط (سرعة | مسافة | مدة) ═══════════ -->
+    <div class="pointer-events-none hud-top absolute inset-x-0 z-[1000] flex justify-center px-4">
+      <div class="pointer-events-auto hud-bar" role="group" aria-label="عدادات الرحلة">
+        <div class="hud-cell hud-cell-speed">
           <span class="hud-label">السرعة <span id="gpsDot" class="gps-dot" title="دقة GPS" aria-label="دقة GPS"></span></span>
           <span id="hudSpeed" class="hud-value hud-speed">0</span>
           <span class="hud-unit">كم/س</span>
         </div>
-        <div class="hud-card">
+        <div class="hud-cell">
           <span class="hud-label">المسافة</span>
           <span id="hudDistance" class="hud-value">0.00</span>
           <span class="hud-unit">كم</span>
         </div>
-        <div class="hud-card">
+        <div class="hud-cell">
           <span class="hud-label">المدة</span>
           <span id="hudDuration" class="hud-value hud-duration">00:00:00</span>
           <span class="hud-unit">&nbsp;</span>
@@ -251,14 +249,18 @@
       </div>
     </div>
 
-    <!-- ═══════════ زر التسجيل المركزي ═══════════ -->
-    <div
-      class="absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-[1000] flex justify-center px-4"
-    >
-      <button id="recordBtn" class="record-btn" type="button" aria-label="تسجيل المسار — بدء أو إيقاف">
-        <span id="recordDot" class="record-dot" aria-hidden="true"></span>
-        <span id="recordLabel">تسجيل المسار</span>
-      </button>
+    <!-- ═══════════ زر التسجيل: كبسولة بلون الهوية، وأثناء التسجيل زجاج + إيقاف مؤقت ═══════════ -->
+    <div class="rec-dock absolute inset-x-0 z-[1000] flex justify-center px-4">
+      <div class="rec-group">
+        <button id="recordBtn" class="record-btn" type="button" aria-label="بدء الرحلة أو إيقافها">
+          <span id="recordDot" class="record-dot" aria-hidden="true"></span>
+          <span id="recordLabel">ابدأ الرحلة</span>
+        </button>
+        <button id="pauseBtn" class="pause-btn hidden" type="button" aria-label="إيقاف مؤقت" title="إيقاف مؤقت">
+          <span class="pause-ic ic-pause"><svg class="i " aria-hidden="true"><use href="#i-pause"/></svg></span>
+          <span class="pause-ic ic-play"><svg class="i " aria-hidden="true"><use href="#i-play"/></svg></span>
+        </button>
+      </div>
     </div>
 
     <!-- ═══════════ بطاقة النقطة الثابتة (Bottom Sheet — لا تدور مع الخريطة) ═══════════

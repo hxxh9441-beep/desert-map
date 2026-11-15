@@ -296,8 +296,9 @@ ${pts}
 
     // ارسم المسار فوراً + كبّر عليه
     importedLine = L.polyline(track.coordinates, {
-      color: '#00E5FF',
-      weight: 4,
+      color: '#22D3EE',
+      weight: 5,
+      className: 'route-line',
       opacity: 0.95,
       lineCap: 'round',
       lineJoin: 'round',

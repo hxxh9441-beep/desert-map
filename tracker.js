@@ -14,6 +14,7 @@
   /* ---------- عناصر الواجهة ---------- */
   const recordBtn = document.getElementById('recordBtn')
   const recordLabel = document.getElementById('recordLabel')
+  const pauseBtn = document.getElementById('pauseBtn')
   const hudSpeed = document.getElementById('hudSpeed')
   const hudDistance = document.getElementById('hudDistance')
   const hudDuration = document.getElementById('hudDuration')
@@ -97,6 +98,10 @@
     speed: 0, // كم/س
     elapsed: 0, // ثوانٍ
     startTime: 0,
+    paused: false, // إيقاف مؤقت: لا نقاط ولا عدّاد
+    pausedAt: 0,
+    pausedMs: 0, // مجموع مدد الإيقاف المؤقت
+    afterPause: false, // أول نقطة بعد الاستئناف لا تضيف مسافة القفزة
     lastFixTime: 0,
     error: null,
     lastKnown: null, // آخر موقع معروف {lat,lng,heading,speedKmh,accuracy,ts}
@@ -106,8 +111,9 @@
   function updatePolyline() {
     if (!state.polyline) {
       state.polyline = L.polyline(state.points, {
-        color: '#00E5FF',
-        weight: 4,
+        color: '#22D3EE',
+        weight: 5,
+        className: 'route-line',
         opacity: 0.95,
         lineCap: 'round',
         lineJoin: 'round',
@@ -199,6 +205,12 @@
       return
     }
 
+    // إيقاف مؤقت: البَك يتحدث لكن لا نقاط تُسجَّل
+    if (state.paused) {
+      renderHud()
+      return
+    }
+
     // حماية الدقة: لا نسجل إشارة أدق من 25م
     if (state.lastKnown.accuracy > MAX_ACCURACY_M) return
 
@@ -208,6 +220,16 @@
       state.lastFixTime = now
       updatePolyline()
       map.setView(point, Math.max(map.getZoom(), 16))
+      renderHud()
+      return
+    }
+
+    // أول نقطة بعد الاستئناف: نضيفها دون احتساب مسافة القفزة أثناء التوقف
+    if (state.afterPause) {
+      state.afterPause = false
+      state.points.push(point)
+      state.lastFixTime = now
+      updatePolyline()
       renderHud()
       return
     }
@@ -251,7 +273,9 @@
 
     // نعرض خطأ GPS فقط أثناء التسجيل — لا نزعج المستخدم أثناء التصفح
     if (state.error && state.recording) {
-      gpsError.textContent = `⚠️ ${state.error}`
+      const p = gpsError.querySelector('p') || gpsError
+      p.innerHTML = Utils.icon('triangle-alert', 'i-sm')
+      p.appendChild(Object.assign(document.createElement('span'), { textContent: state.error }))
       gpsError.classList.remove('hidden')
     } else {
       gpsError.classList.add('hidden')
@@ -260,7 +284,37 @@
 
   function updateUI() {
     recordBtn.classList.toggle('recording', state.recording)
-    recordLabel.textContent = state.recording ? 'إيقاف التسجيل' : 'تسجيل المسار'
+    recordBtn.classList.toggle('paused', state.recording && state.paused)
+    recordLabel.textContent = state.recording ? 'إيقاف' : 'ابدأ الرحلة'
+    if (pauseBtn) {
+      pauseBtn.classList.toggle('hidden', !state.recording)
+      pauseBtn.classList.toggle('is-paused', state.paused)
+      const label = state.paused ? 'استئناف التسجيل' : 'إيقاف مؤقت'
+      pauseBtn.setAttribute('aria-label', label)
+      pauseBtn.title = label
+    }
+  }
+
+  /* اهتزاز خفيف (إن كان مدعومًا) */
+  function haptic(pattern) {
+    try {
+      if (navigator.vibrate) navigator.vibrate(pattern)
+    } catch {}
+  }
+
+  /* ---------- إيقاف مؤقت / استئناف ---------- */
+  function togglePause() {
+    if (!state.recording) return
+    if (state.paused) {
+      state.pausedMs += Date.now() - state.pausedAt
+      state.paused = false
+      state.afterPause = true
+    } else {
+      state.paused = true
+      state.pausedAt = Date.now()
+    }
+    haptic(8)
+    updateUI()
   }
 
   /* ---------- التشغيل/الإيقاف ---------- */
@@ -272,6 +326,9 @@
     state.elapsed = 0
     state.error = null
     state.startTime = Date.now()
+    state.paused = false
+    state.pausedMs = 0
+    state.afterPause = false
     state.lastFixTime = 0
     clearPolyline()
     closeSaveModal()
@@ -280,18 +337,22 @@
 
     state.recording = true
     state.timerInterval = setInterval(() => {
-      state.elapsed = (Date.now() - state.startTime) / 1000
+      if (state.paused) return // العدّاد متوقف أثناء الإيقاف المؤقت
+      state.elapsed = (Date.now() - state.startTime - state.pausedMs) / 1000
       renderHud()
     }, 1000)
 
     // الشاشة تبقى مضيئة أثناء التسجيل
     acquireWakeLock()
 
+    haptic(12)
     updateUI()
   }
 
   function stop() {
     state.recording = false
+    state.paused = false
+    haptic([12, 60, 12])
     if (state.timerInterval) {
       clearInterval(state.timerInterval)
       state.timerInterval = null
@@ -396,6 +457,7 @@
     if (state.recording) stop()
     else start()
   })
+  if (pauseBtn) pauseBtn.addEventListener('click', togglePause)
 
   /* ---------- موقع من افتتاح التطبيق أو زر 🎯 (map.locate) ----------
      app.js يستدعي map.locate ويرسل desert:located — نرسم هنا البَك
@@ -465,5 +527,6 @@
     releaseWakeLock,
     openImportSaveModal,
     simulateFix,
+    togglePause,
   }
 })()

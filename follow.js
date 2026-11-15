@@ -126,9 +126,10 @@
   function drawRoute() {
     if (st.route) map.removeLayer(st.route)
     st.route = L.polyline(st.pts, {
-      color: '#fbbf24',
+      color: '#22d3ee',
       weight: 5,
-      opacity: 0.9,
+      opacity: 0.95,
+      className: 'route-line',
       dashArray: '2 10',
       lineCap: 'round',
     }).addTo(map)

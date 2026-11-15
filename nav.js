@@ -76,8 +76,9 @@
       }).addTo(map)
       nav.line = L.polyline([from, to], {
         color: '#22d3ee',
-        weight: 4,
+        weight: 5,
         opacity: 0.95,
+        className: 'route-line',
         dashArray: '10 12',
         lineCap: 'round',
       }).addTo(map)

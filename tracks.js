@@ -97,8 +97,9 @@
     if (!track || !Array.isArray(track.coordinates) || track.coordinates.length === 0) return
     clearViewed()
     const line = L.polyline(track.coordinates, {
-      color: '#00E5FF',
-      weight: 4,
+      color: '#22D3EE',
+      weight: 5,
+      className: 'route-line',
       opacity: 0.95,
       lineCap: 'round',
       lineJoin: 'round',
@@ -207,8 +208,9 @@
     // رسم المسار المستورد
     clearGpxPreview()
     gpxPreviewLine = L.polyline(pts, {
-      color: '#00E5FF',
-      weight: 4,
+      color: '#22D3EE',
+      weight: 5,
+      className: 'route-line',
       opacity: 0.95,
       lineCap: 'round',
       lineJoin: 'round',

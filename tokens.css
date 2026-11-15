@@ -90,6 +90,7 @@
   --dur: 280ms;
   --dur-fast: 180ms;
   --press: 0.96;
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* ارتداد ناعم للعناصر التي "تكبر" */
 
   /* ── الخط ── */
   --font: -apple-system, BlinkMacSystemFont, 'SF Arabic', 'SF Pro', 'IBM Plex Sans Arabic',
