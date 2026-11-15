@@ -26,7 +26,10 @@
       t.className = 'toast'
       document.body.appendChild(t)
     }
-    t.textContent = msg
+    // أيقونة SVG بدل الإيموجي (النص يُدرج كنص لا HTML)
+    const { icon, text } = Utils.splitEmoji(msg)
+    t.innerHTML = icon ? Utils.icon(icon, 'i-sm') : ''
+    t.appendChild(Object.assign(document.createElement('span'), { textContent: text }))
     t.classList.add('show')
     clearTimeout(t._timer)
     t._timer = setTimeout(() => t.classList.remove('show'), 2400)

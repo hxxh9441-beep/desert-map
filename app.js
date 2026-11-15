@@ -15,12 +15,11 @@
     center: RIYADH,
     zoom: DEFAULT_ZOOM,
     maxZoom: MAX_ZOOM,
-    zoomControl: false, // نضيف تحكماً مخصصاً في الأسفل
+    zoomControl: false, // بلا أزرار تكبير — اللمس يكفي
     attributionControl: true,
   })
 
-  // تحكم تكبير مخصص — أسفل اليسار بعيداً عن الأزرار العائمة
-  L.control.zoom({ position: 'bottomleft' }).addTo(map)
+  // لا أزرار + و−: التكبير باللمس (قرص/نقر مزدوج) وعجلة الماوس، والزوم التلقائي في وضع القيادة
 
   /* ---------- الطبقات الخمس ----------
      maxNativeZoom: حد البلاطات الأصلي — ما بعده تتمدد البلاطات (بدون 404)

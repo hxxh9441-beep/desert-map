@@ -212,7 +212,36 @@ window.Utils = (() => {
     } catch {}
   }
 
+  /* ═══════════ الأيقونات (Lucide — سبرايت مضمّن في index.html) ═══════════ */
+
+  /** وسم SVG لأيقونة من السبرايت. cls: فئات إضافية (مثل i-sm) */
+  function icon(name, cls = '') {
+    return `<svg class="i ${cls}" aria-hidden="true"><use href="#i-${name}"/></svg>`
+  }
+
+  const EMOJI_RE = /[\p{Extended_Pictographic}\u200d\ufe0f]+/gu
+  // أول إيموجي في الرسالة → أيقونة مكافئة (للإشعارات القديمة النص)
+  const EMOJI_ICON = {
+    '⚠': 'triangle-alert', '✅': 'circle-check', '🏁': 'flag', '🧭': 'compass', '📍': 'map-pin',
+    '🗑': 'trash-2', '🔄': 'refresh-cw', '🚗': 'car', '🛣': 'route', '🏙': 'building-2',
+    '🔊': 'volume-2', '🔇': 'volume-x', 'ℹ': 'info', '📋': 'clipboard-check', '🔗': 'link-2',
+    '⬇': 'download', '💾': 'save', '📥': 'cloud-download', '⏹': 'square', '🎯': 'locate-fixed',
+  }
+
+  /** يفصل الإيموجي عن النص: {icon, text} */
+  function splitEmoji(msg) {
+    const s = String(msg == null ? '' : msg)
+    const m = s.match(/^\s*([\p{Extended_Pictographic}\u200d\ufe0f]+)/u)
+    const first = m ? [...m[1].replace(/\ufe0f/g, '')][0] : null
+    return {
+      icon: first ? EMOJI_ICON[first] || null : null,
+      text: s.replace(EMOJI_RE, '').replace(/[ \t]{2,}/g, ' ').trim(),
+    }
+  }
+
   return {
+    icon,
+    splitEmoji,
     notify,
     haversine,
     formatDistance,
