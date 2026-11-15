@@ -249,6 +249,16 @@
         <span class="flex-1 text-sm font-semibold text-white">نقاط البر — رياض · آبار · مخيمات</span>
         <span class="switch"><span class="track"></span></span>
       </label>
+
+      <!-- تحميل المنطقة للأوفلاين -->
+      <div class="offline-row">
+        <button id="offlineBtn" class="offline-btn" type="button">
+          <span id="offlineLabel">📥 تحميل المنطقة الظاهرة للأوفلاين</span>
+          <span class="offline-progress hidden"><span id="offlineBar"></span></span>
+        </button>
+        <button id="offlineClear" class="offline-clear" type="button" aria-label="حذف الخرائط المحملة" title="حذف الخرائط المحملة">🗑️</button>
+      </div>
+      <p id="offlineSize" class="px-3 pt-1 text-[11px] text-slate-500"></p>
     </div>
 
     <!-- ═══════════ مودال حفظ المسار ═══════════ -->
@@ -386,6 +396,8 @@
     <script src="nav.js"></script>
     <!-- دوران الخريطة + البوصلة -->
     <script src="compass.js"></script>
+    <!-- تحميل المناطق للأوفلاين -->
+    <script src="offline.js"></script>
     <!-- تسجيل عامل الخدمة (الأوفلاين) -->
     <script>
       if ('serviceWorker' in navigator) {
