@@ -187,7 +187,33 @@ window.Utils = (() => {
     return dirs[Math.round(d / 45) % 8]
   }
 
+  /**
+   * تنبيه حسّي: اهتزاز + نغمة قصيرة (يفشل بصمت إن لم يُسمح)
+   * @param {number[]} pattern نمط الاهتزاز (مللي ثانية)
+   * @param {number} freq تردد النغمة Hz
+   */
+  function notify(pattern = [300], freq = 880) {
+    try {
+      if (navigator.vibrate) navigator.vibrate(pattern)
+    } catch {}
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext
+      if (!Ctx) return
+      const ctx = new Ctx()
+      const o = ctx.createOscillator()
+      const g = ctx.createGain()
+      o.frequency.value = freq
+      g.gain.value = 0.15
+      o.connect(g)
+      g.connect(ctx.destination)
+      o.start()
+      o.stop(ctx.currentTime + 0.35)
+      o.onended = () => ctx.close()
+    } catch {}
+  }
+
   return {
+    notify,
     haversine,
     formatDistance,
     formatDuration,

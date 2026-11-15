@@ -26,6 +26,8 @@
     glow: null, // طبقة التوهج تحت الخط
     marker: null,
     interval: null,
+    arrived: false,
+    approached: false,
   }
 
   // مؤشر الهدف على الخريطة
@@ -98,12 +100,48 @@
     targetDist.textContent = Utils.formatDistance(dist)
     targetBearing.textContent = `${Math.round(brg)}° ${Utils.cardinalAr(brg)}`
     targetHud.classList.add('open')
+    checkArrival(dist)
+  }
+
+  /* ---------- تنبيه الاقتراب والوصول (فقط بموقع GPS حقيقي) ---------- */
+  const APPROACH_M = 200
+  const ARRIVE_MIN_M = 25
+  const REARM_M = 100 // الابتعاد عن الهدف بهذه المسافة يعيد تفعيل التنبيه
+
+  function checkArrival(dist) {
+    const k = TRACKER.lastKnown
+    if (!k) return
+    const arriveM = Math.max(ARRIVE_MIN_M, Math.min(k.accuracy || 0, 60))
+    if (dist <= arriveM) {
+      if (!nav.arrived) {
+        nav.arrived = true
+        nav.approached = true
+        Utils.notify([500, 150, 500, 150, 500], 660)
+        showToast(`🏁 وصلت إلى «${nav.target.name}»`)
+        targetHud.classList.add('arrived')
+      }
+      targetBearing.textContent = 'وصلت'
+    } else if (dist <= APPROACH_M) {
+      if (!nav.approached) {
+        nav.approached = true
+        Utils.notify([250], 880)
+        showToast(`📍 اقتربت من «${nav.target.name}» — ${Utils.formatDistance(dist)}`)
+      }
+    } else if (dist > REARM_M + arriveM) {
+      // ابتعاد حقيقي: أعد التسليح للاقتراب/الوصول القادم
+      if (nav.arrived) targetHud.classList.remove('arrived')
+      nav.arrived = false
+      if (dist > APPROACH_M * 1.5) nav.approached = false
+    }
   }
 
   /* ---------- بدء/إلغاء التوجيه ---------- */
   function navigateTo(name, lat, lng) {
     clearTarget(false)
     nav.target = { name, lat, lng }
+    nav.arrived = false
+    nav.approached = false
+    targetHud.classList.remove('arrived')
     updateTarget()
     // تحديث مستمر كل ثانية (الخط يتبع حركتك)
     nav.interval = setInterval(updateTarget, 1000)
@@ -127,7 +165,7 @@
       clearInterval(nav.interval)
       nav.interval = null
     }
-    targetHud.classList.remove('open')
+    targetHud.classList.remove('open', 'arrived')
     if (showToastMsg) showToast('تم إنهاء الملاحة')
   }
 

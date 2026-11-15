@@ -73,25 +73,8 @@
   }
 
   /* ---------- تنبيه ---------- */
-  function beep() {
-    try {
-      const Ctx = window.AudioContext || window.webkitAudioContext
-      if (!Ctx) return
-      const ctx = new Ctx()
-      const o = ctx.createOscillator()
-      const g = ctx.createGain()
-      o.frequency.value = 880
-      g.gain.value = 0.15
-      o.connect(g)
-      g.connect(ctx.destination)
-      o.start()
-      o.stop(ctx.currentTime + 0.35)
-      o.onended = () => ctx.close()
-    } catch {}
-  }
   function alertOff(distM) {
-    if (navigator.vibrate) navigator.vibrate([300, 120, 300, 120, 300])
-    beep()
+    Utils.notify([300, 120, 300, 120, 300], 880)
     toast(`⚠️ ابتعدت عن المسار ${Utils.formatDistance(distM)}`)
   }
 
@@ -153,7 +136,7 @@
       statusEl.textContent = `على المسار · المتبقي ${Utils.formatDistance(remaining)}`
       if (remaining <= ARRIVE_M && !st.arrived && st.total > 100) {
         st.arrived = true
-        if (navigator.vibrate) navigator.vibrate([500, 150, 500])
+        Utils.notify([500, 150, 500], 660)
         toast('🏁 وصلت نهاية المسار')
       }
     }
