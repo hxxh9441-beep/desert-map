@@ -1,0 +1,422 @@
+/* ═══════════════════════════════════════════════════════════════
+   خارطة البر — طبقة الواجهة (Liquid Glass)
+   تُحمَّل بعد style.css وتعتمد حصرًا على متغيرات tokens.css.
+   شكل فقط — لا منطق. المرحلة 1: الأساس والأسطح الحالية.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ───────── أساس الخط والخريطة ───────── */
+body {
+  font-family: var(--font);
+}
+.leaflet-container {
+  background: var(--bg);
+}
+.hud-value {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.hud-speed {
+  font-weight: 600;
+  color: var(--text);
+  text-shadow: none;
+}
+.hud-duration {
+  color: var(--text);
+}
+.hud-label {
+  font-size: 12px;
+  color: var(--text-2);
+}
+.hud-unit {
+  color: var(--text-3);
+}
+
+/* ───────── الأسطح العائمة: زجاج موحّد ───────── */
+.fab,
+.hud-card,
+.search-wrap,
+.search-results,
+.nav-hud,
+.pin-sheet,
+.layer-sheet,
+#tracksPanel,
+#importBanner > div,
+.toast,
+.compass-btn {
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 0.5px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-hl), var(--glass-shadow);
+  color: var(--text);
+}
+/* الأسطح الكثيفة بالنص: أكثر عتمة للقراءة */
+.pin-sheet,
+.layer-sheet,
+#tracksPanel,
+.search-results,
+#importBanner > div {
+  background: var(--bg-sheet);
+  border-radius: var(--radius);
+}
+.fab {
+  border-radius: var(--radius-pill);
+}
+.hud-card,
+.search-wrap,
+.nav-hud {
+  border-radius: var(--radius);
+}
+.compass-btn {
+  border-radius: var(--radius-pill);
+}
+
+/* المودالات */
+#poiModal,
+#saveModal,
+#shareModal {
+  background: rgba(10, 8, 6, 0.55);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+#poiModal > div,
+#saveModal > div,
+#shareModal > div {
+  background: var(--bg-sheet);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: inset 0 1px 0 var(--glass-hl), 0 16px 48px rgba(0, 0, 0, 0.45);
+  color: var(--text);
+}
+#poiModal h2,
+#saveModal h2,
+#shareModal h2 {
+  color: var(--text);
+}
+
+/* ───────── ألوان النصوص (تعويض فئات Tailwind الرمادية) ───────── */
+.text-white,
+.text-slate-100,
+.text-slate-300 {
+  color: var(--text);
+}
+.text-slate-400,
+.text-slate-500 {
+  color: var(--text-2);
+}
+.text-cyan-300 {
+  color: var(--text);
+}
+
+/* ───────── تفاعل موحّد: ضغط + رجوع ناعم ───────── */
+.fab,
+.compass-btn,
+.record-btn,
+.search-act,
+.btn-primary,
+.btn-ghost,
+.track-action,
+.pin-sheet-btn,
+.pin-sheet-x,
+.nav-hud-x,
+.gpx-btn,
+.poi-type,
+.layer-option,
+.offline-btn,
+.offline-clear {
+  transition:
+    transform var(--dur) var(--ease),
+    background var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease),
+    opacity var(--dur) var(--ease);
+}
+.fab:active,
+.compass-btn:active,
+.record-btn:active,
+.search-act:active,
+.btn-primary:active,
+.btn-ghost:active,
+.track-action:active,
+.pin-sheet-btn:active,
+.pin-sheet-x:active,
+.nav-hud-x:active,
+.gpx-btn:active,
+.poi-type:active,
+.offline-btn:active {
+  transform: scale(var(--press));
+}
+.fab:hover,
+.layer-option:hover,
+.track-action:hover,
+.search-act:hover,
+.btn-ghost:hover {
+  background: var(--fill-hover);
+  border-color: var(--glass-border);
+}
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ───────── العنصر النشط = اللون المميز فقط ───────── */
+.fab[aria-expanded='true'],
+.compass-btn.active,
+#locateBtn.follow-on {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  box-shadow: inset 0 1px 0 var(--glass-hl), 0 0 0 3px var(--accent-soft), var(--glass-shadow);
+  color: var(--text);
+}
+.layer-option:has(input:checked) {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+.option-check {
+  color: var(--text);
+}
+.poi-type.selected {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  color: var(--text);
+}
+.poi-layer-toggle input:checked + .switch {
+  background: var(--accent);
+}
+.poi-layer-toggle input:checked + .switch .track {
+  background: var(--on-accent);
+}
+.poi-layer-toggle .switch .track {
+  background: var(--text-2);
+}
+.poi-layer-toggle .switch {
+  background: var(--fill-hover);
+}
+.search-wrap:focus-within {
+  border-color: var(--accent-border);
+  box-shadow: inset 0 1px 0 var(--glass-hl), 0 0 0 3px var(--accent-soft), var(--glass-shadow);
+}
+
+/* ───────── الأزرار ───────── */
+.btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 20px rgba(180, 83, 42, 0.35);
+  font-weight: 600;
+}
+.btn-primary:hover {
+  filter: brightness(1.08);
+}
+.btn-ghost {
+  background: var(--fill);
+  color: var(--text);
+  border: 0.5px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+}
+.modal-input {
+  background: var(--fill);
+  border: 0.5px solid var(--glass-border);
+  color: var(--text);
+  border-radius: var(--radius-md);
+}
+.modal-input::placeholder {
+  color: var(--text-3);
+}
+.modal-input:focus {
+  border-color: var(--accent-border);
+  background: var(--fill-hover);
+}
+.poi-type,
+.track-action,
+.search-act,
+.offline-clear,
+.pin-sheet-x {
+  background: var(--fill);
+  border: 0.5px solid var(--glass-border);
+  color: var(--text);
+}
+.poi-type {
+  border-radius: var(--radius-md);
+}
+.gpx-btn,
+.offline-btn {
+  background: var(--fill);
+  border: 0.5px solid var(--glass-border);
+  color: var(--text);
+}
+.offline-progress > span {
+  background: var(--accent);
+}
+.pin-sheet-nav,
+.pin-sheet-save {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+.pin-sheet-share {
+  background: var(--fill);
+  color: var(--text);
+  border: 0.5px solid var(--glass-border);
+}
+.pin-sheet-del {
+  background: rgba(239, 68, 68, 0.14);
+  color: #f2a29a;
+  border: 0.5px solid rgba(239, 68, 68, 0.4);
+}
+.pin-sheet-title {
+  color: var(--text);
+  font-weight: 600;
+}
+.pin-sheet-sub {
+  color: var(--text-2);
+}
+.pin-sheet-coord {
+  color: var(--text);
+  background: var(--fill);
+  border-color: var(--divider);
+}
+.pin-sheet-coord.pin-sheet-dd {
+  color: var(--text-3);
+}
+.pin-sheet-icon {
+  background: var(--fill);
+  border-color: var(--glass-border);
+}
+
+/* ───────── البحث ───────── */
+.search-input {
+  color: var(--text);
+  font-family: var(--font);
+}
+.search-input::placeholder {
+  color: var(--text-3);
+}
+.search-icon {
+  color: var(--text-2);
+}
+.search-result-item {
+  border-bottom-color: var(--divider);
+}
+.search-result-item:active,
+.search-result-item:hover {
+  background: var(--fill-hover);
+}
+
+/* ───────── أشرطة الملاحة (لون وظيفي فيروزي للمسار والهدف) ───────── */
+.nav-hud {
+  border-color: var(--glass-border);
+}
+.nav-hud-name {
+  color: var(--text);
+  font-weight: 600;
+}
+.nav-hud-dist {
+  color: var(--route);
+  text-shadow: none;
+  font-weight: 600;
+}
+.nav-hud-brg {
+  color: var(--text);
+  background: var(--fill);
+  border: 0.5px solid var(--glass-border);
+}
+.follow-hud {
+  border-color: var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-hl), var(--glass-shadow);
+}
+.follow-turn {
+  color: var(--text);
+}
+#followHud.off .follow-hud {
+  border-color: rgba(239, 68, 68, 0.7);
+  box-shadow: inset 0 1px 0 var(--glass-hl), 0 0 0 3px rgba(239, 68, 68, 0.2), var(--glass-shadow);
+}
+#targetHud.arrived .nav-hud {
+  border-color: rgba(52, 199, 89, 0.7);
+  box-shadow: inset 0 1px 0 var(--glass-hl), 0 0 0 3px rgba(52, 199, 89, 0.2), var(--glass-shadow);
+}
+.nav-hud-x {
+  border: 0.5px solid var(--glass-border);
+  background: var(--fill);
+  color: var(--text);
+}
+#clearTargetBtn,
+#followStopBtn {
+  color: #f2a29a;
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+.nav-hud-x.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+/* ───────── زر التسجيل (مؤقت — يُعاد بناؤه في المرحلة 3) ───────── */
+.record-btn {
+  background: var(--accent);
+  border: 0.5px solid var(--accent-border);
+  color: var(--on-accent);
+  font-family: var(--font);
+  font-weight: 600;
+  box-shadow: 0 8px 28px rgba(180, 83, 42, 0.4);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.record-btn.recording {
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-color: var(--glass-border);
+  color: var(--text);
+  box-shadow: inset 0 1px 0 var(--glass-hl), var(--glass-shadow);
+}
+.record-dot {
+  background: var(--on-accent);
+  box-shadow: none;
+}
+.record-btn.recording .record-dot {
+  background: var(--recording);
+  box-shadow: 0 0 12px var(--recording);
+}
+
+/* ───────── الإشعار ───────── */
+.toast {
+  background: var(--bg-sheet);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ───────── مؤشرات الخريطة ───────── */
+.temp-marker {
+  background: var(--route);
+  box-shadow: 0 0 0 2px var(--route);
+  border-color: var(--bg);
+}
+.poi-marker {
+  border-color: var(--bg);
+}
+
+/* ───────── مفتاح الحقوق ───────── */
+.leaflet-control-attribution {
+  background: rgba(22, 19, 15, 0.7) !important;
+  color: var(--text-2) !important;
+}
+.leaflet-control-attribution a {
+  color: var(--text-2) !important;
+}
+.leaflet-control-zoom {
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 0.5px solid var(--glass-border) !important;
+  border-radius: var(--radius) !important;
+}
+.leaflet-control-zoom a {
+  background: transparent !important;
+  color: var(--text) !important;
+  border-bottom-color: var(--divider) !important;
+}

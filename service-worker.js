@@ -6,7 +6,7 @@
    - البلاطات الخارجية: كاش أولاً + تحديث خلفي (حد 1500 بلاطة)
      (المناطق المعروضة سابقاً تبقى متاحة بدون اتصال)
    ═══════════════════════════════════════════════════════════════ */
-const VERSION = 'wildmap-v29'
+const VERSION = 'wildmap-v30'
 const CORE_CACHE = `${VERSION}-core`
 const TILE_CACHE = `${VERSION}-tiles`
 
@@ -15,6 +15,8 @@ const CORE_ASSETS = [
   './index.html',
   './tailwind.css',
   './style.css',
+  './tokens.css',
+  './ui.css',
   './manifest.json',
   './app.js',
   './utils.js',
@@ -31,8 +33,10 @@ const CORE_ASSETS = [
   './route.js',
   './drive.js',
   './desert_pois.json',
-  './fonts/thmanyah-serif-regular.woff2',
-  './fonts/thmanyah-serif-bold.woff2',
+  './fonts/ibm-plex-sans-arabic-arabic-400-normal.woff2',
+  './fonts/ibm-plex-sans-arabic-latin-400-normal.woff2',
+  './fonts/ibm-plex-sans-arabic-arabic-600-normal.woff2',
+  './fonts/ibm-plex-sans-arabic-latin-600-normal.woff2',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-512-maskable.png',

@@ -1,0 +1,177 @@
+/* ═══════════════════════════════════════════════════════════════
+   خارطة البر — Design Tokens + أساس الزجاج (Liquid Glass)
+   ملف واحد لكل المتغيرات. الوضع الليلي هو الافتراضي؛ الوضع النهاري
+   مُعرَّف أسفل الملف ويُفعَّل بـ <html data-theme="light"> (غير موصول بعد).
+   لا يُكتب أي لون ثابت في ui.css — كله من هنا.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ---------- الخط: محلي للأوفلاين (احتياط بعد خط النظام لآبل) ---------- */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/ibm-plex-sans-arabic-arabic-400-normal.woff2') format('woff2');
+  unicode-range: U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC,U+102E0-102FB,U+10E60-10E7E,U+10EC2-10EC4,U+10EFC-10EFF,U+1EE00-1EE03,U+1EE05-1EE1F,U+1EE21-1EE22,U+1EE24,U+1EE27,U+1EE29-1EE32,U+1EE34-1EE37,U+1EE39,U+1EE3B,U+1EE42,U+1EE47,U+1EE49,U+1EE4B,U+1EE4D-1EE4F,U+1EE51-1EE52,U+1EE54,U+1EE57,U+1EE59,U+1EE5B,U+1EE5D,U+1EE5F,U+1EE61-1EE62,U+1EE64,U+1EE67-1EE6A,U+1EE6C-1EE72,U+1EE74-1EE77,U+1EE79-1EE7C,U+1EE7E,U+1EE80-1EE89,U+1EE8B-1EE9B,U+1EEA1-1EEA3,U+1EEA5-1EEA9,U+1EEAB-1EEBB,U+1EEF0-1EEF1;
+}
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/ibm-plex-sans-arabic-latin-400-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('fonts/ibm-plex-sans-arabic-arabic-600-normal.woff2') format('woff2');
+  unicode-range: U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC,U+102E0-102FB,U+10E60-10E7E,U+10EC2-10EC4,U+10EFC-10EFF,U+1EE00-1EE03,U+1EE05-1EE1F,U+1EE21-1EE22,U+1EE24,U+1EE27,U+1EE29-1EE32,U+1EE34-1EE37,U+1EE39,U+1EE3B,U+1EE42,U+1EE47,U+1EE49,U+1EE4B,U+1EE4D-1EE4F,U+1EE51-1EE52,U+1EE54,U+1EE57,U+1EE59,U+1EE5B,U+1EE5D,U+1EE5F,U+1EE61-1EE62,U+1EE64,U+1EE67-1EE6A,U+1EE6C-1EE72,U+1EE74-1EE77,U+1EE79-1EE7C,U+1EE7E,U+1EE80-1EE89,U+1EE8B-1EE9B,U+1EEA1-1EEA3,U+1EEA5-1EEA9,U+1EEAB-1EEBB,U+1EEF0-1EEF1;
+}
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('fonts/ibm-plex-sans-arabic-latin-600-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+:root {
+  /* ── ألوان الهوية (ليلي) ── */
+  --bg: #16130f;
+  --bg-sheet: rgba(30, 25, 20, 0.86); /* أسطح كثيفة النص (مودالات/لوحات) */
+  --glass: rgba(30, 25, 20, 0.55);
+  --glass-border: rgba(255, 240, 220, 0.14);
+  --glass-hl: rgba(255, 255, 255, 0.12); /* لمعة داخلية */
+  --text: #f2e8d8;
+  --text-2: rgba(242, 232, 216, 0.6);
+  --text-3: rgba(242, 232, 216, 0.38);
+  --divider: rgba(255, 240, 220, 0.1);
+  --fill: rgba(255, 240, 220, 0.07); /* خلفية عناصر داخل الزجاج */
+  --fill-hover: rgba(255, 240, 220, 0.12);
+
+  /* ── اللون المميز: الأزرار الأساسية والعناصر النشطة فقط ── */
+  --accent: #b4532a;
+  --accent-soft: rgba(180, 83, 42, 0.18);
+  --accent-border: rgba(214, 120, 72, 0.55);
+  --on-accent: #f7ecdc;
+  --focus: rgba(242, 232, 216, 0.85);
+
+  /* ── ألوان وظيفية (ليست هوية) ── */
+  --route: #22d3ee; /* خط المسار والهدف والملاحة */
+  --route-casing: rgba(6, 12, 20, 0.85);
+  --recording: #d9442b;
+  --ok: #34c759;
+  --warn: #fbbf24;
+  --danger: #ef4444;
+
+  /* ── الأشكال ── */
+  --radius: 22px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+  --radius-pill: 9999px;
+  --hit: 44px; /* أقل حجم للمس */
+
+  /* ── مسافات على شبكة 8px ── */
+  --s1: 8px;
+  --s2: 16px;
+  --s3: 24px;
+  --s4: 32px;
+
+  /* ── الزجاج ── */
+  --glass-blur: blur(24px) saturate(180%);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+
+  /* ── الحركة ── */
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur: 280ms;
+  --dur-fast: 180ms;
+  --press: 0.96;
+
+  /* ── الخط ── */
+  --font: -apple-system, BlinkMacSystemFont, 'SF Arabic', 'SF Pro', 'IBM Plex Sans Arabic',
+    system-ui, sans-serif;
+
+  /* ── المناطق الآمنة ── */
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+
+  /* ── تدرّجات الشاشة فوق الصورة الفضائية ── */
+  --scrim-top: linear-gradient(to bottom, rgba(10, 8, 6, 0.55), rgba(10, 8, 6, 0));
+  --scrim-bottom: linear-gradient(to top, rgba(10, 8, 6, 0.6), rgba(10, 8, 6, 0));
+
+  color-scheme: dark;
+}
+
+/* ── الوضع النهاري (مُجهَّز للمرحلة اللاحقة — لا يُفعَّل بعد) ── */
+:root[data-theme='light'] {
+  --bg: #f3ece1;
+  --bg-sheet: rgba(245, 238, 228, 0.9);
+  --glass: rgba(245, 238, 228, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.7);
+  --glass-hl: rgba(255, 255, 255, 0.5);
+  --text: #2b2118;
+  --text-2: rgba(43, 33, 24, 0.55);
+  --text-3: rgba(43, 33, 24, 0.38);
+  --divider: rgba(43, 33, 24, 0.1);
+  --fill: rgba(43, 33, 24, 0.06);
+  --fill-hover: rgba(43, 33, 24, 0.1);
+  --focus: rgba(43, 33, 24, 0.8);
+  --glass-shadow: 0 8px 32px rgba(60, 40, 20, 0.18);
+  --scrim-top: linear-gradient(to bottom, rgba(243, 236, 225, 0.5), rgba(243, 236, 225, 0));
+  --scrim-bottom: linear-gradient(to top, rgba(243, 236, 225, 0.55), rgba(243, 236, 225, 0));
+  color-scheme: light;
+}
+
+/* ── الأساس ── */
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── سطح زجاجي أساسي: يُطبَّق على كل عنصر عائم ── */
+.glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 0.5px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-hl), var(--glass-shadow);
+}
+
+/* ── أيقونة SVG موحّدة (Lucide: stroke 1.75، 22px) ── */
+.i {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: middle;
+  pointer-events: none;
+}
+.i-sm {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── حركة أقل لمن يفضّلها ── */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur: 0.01ms;
+    --dur-fast: 0.01ms;
+  }
+}

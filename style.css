@@ -3,26 +3,9 @@
    ثيم داكن عالي التباين + تحكمات عائمة مخصصة (≥48px للمس)
    ═══════════════════════════════════════════════════════════════ */
 
-/* ---------- خط ثمانية (Thmanyah Serif) — محلي للأوفلاين ---------- */
-@font-face {
-  font-family: 'Thmanyah Serif';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('fonts/thmanyah-serif-regular.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Thmanyah Serif';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('fonts/thmanyah-serif-bold.woff2') format('woff2');
-}
-
 /* ---------- الخط الأساسي ---------- */
 body {
-  font-family: 'Thmanyah Serif', -apple-system, BlinkMacSystemFont,
-    'Noto Sans Arabic', system-ui, sans-serif;
+  font-family: var(--font); /* tokens.css */
   -webkit-font-smoothing: antialiased;
 }
 

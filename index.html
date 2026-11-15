@@ -7,7 +7,7 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <title>خارطة البر — ملاحة صحاري وطرق وعرة</title>
-    <meta name="theme-color" content="#0b1120" />
+    <meta name="theme-color" content="#16130F" />
     <meta
       name="description"
       content="تطبيق ملاحة للصحاري والطرق الوعرة — قمر صناعي، تضاريس، ووضع ليلي"
@@ -35,9 +35,12 @@
     <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon-64.png" />
     <!-- التنسيق المخصص -->
     <link rel="stylesheet" href="style.css" />
+    <!-- الهوية: tokens + طبقة الواجهة (Liquid Glass) — بعد style.css -->
+    <link rel="stylesheet" href="tokens.css" />
+    <link rel="stylesheet" href="ui.css" />
   </head>
 
-  <body class="h-dvh w-full overflow-hidden bg-[#0a0f1a] text-slate-100">
+  <body class="h-dvh w-full overflow-hidden">
     <!-- ═══════════ حاوية الخريطة (ملء الشاشة — 150vmax لاستيعاب الدوران) ═══════════ -->
     <div id="map" class="map-canvas"></div>
 
