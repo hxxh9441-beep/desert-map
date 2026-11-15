@@ -16,19 +16,105 @@
   const toast = (m) => window.showToast && window.showToast(m)
   let busy = false
 
-  /** يحسب طريقًا؛ يعيد {coords:[[lat,lng]], distance, duration} أو يرمي خطأً */
+  /* ---------- تعليمات الانعطاف بالعربية ---------- */
+  const DIR = {
+    left: ['انعطف يسارًا', '⬅️'],
+    right: ['انعطف يمينًا', '➡️'],
+    'slight left': ['انعطف يسارًا قليلًا', '↖️'],
+    'slight right': ['انعطف يمينًا قليلًا', '↗️'],
+    'sharp left': ['انعطف يسارًا بحدة', '↙️'],
+    'sharp right': ['انعطف يمينًا بحدة', '↘️'],
+    uturn: ['استدر للخلف', '↩️'],
+    straight: ['استمر للأمام', '⬆️'],
+  }
+
+  /** يحوّل خطوة OSRM إلى {text, icon, kind} */
+  function describe(step) {
+    const m = step.maneuver || {}
+    const type = m.type
+    const mod = m.modifier
+    const name = step.name ? ` إلى ${step.name}` : ''
+    const dir = DIR[mod] || DIR.straight
+    switch (type) {
+      case 'depart':
+        return { kind: 'depart', icon: '🚗', text: `ابدأ السير${step.name ? ' على ' + step.name : ''}` }
+      case 'arrive':
+        return { kind: 'arrive', icon: '🏁', text: 'وصلت إلى وجهتك' }
+      case 'roundabout':
+      case 'rotary':
+      case 'roundabout turn':
+        return {
+          kind: 'turn',
+          icon: '🔄',
+          text: m.exit ? `ادخل الدوّار وخذ المخرج ${m.exit}${name}` : `ادخل الدوّار${name}`,
+        }
+      case 'fork':
+        return {
+          kind: 'turn',
+          icon: dir[1],
+          text: mod && mod.includes('left') ? `خذ المسار الأيسر${name}` : mod && mod.includes('right') ? `خذ المسار الأيمن${name}` : `استمر${name}`,
+        }
+      case 'merge':
+        return { kind: 'turn', icon: '🔀', text: `ادمج${name}` }
+      case 'on ramp':
+        return { kind: 'turn', icon: dir[1], text: `ادخل المنحدر${name}` }
+      case 'off ramp':
+        return { kind: 'turn', icon: dir[1], text: `اخرج من المنحدر${name}` }
+      case 'exit roundabout':
+      case 'exit rotary':
+        return { kind: 'turn', icon: '⬆️', text: `اخرج من الدوّار${name}` }
+      default:
+        // turn / end of road / new name / continue
+        return { kind: 'turn', icon: dir[1], text: `${dir[0]}${name}` }
+    }
+  }
+
+  /** أقرب رأس في المسار لنقطة الانعطاف، من فهرس `from` فصاعدًا */
+  function nearestIdx(coords, loc, from) {
+    let best = from
+    let bestD = Infinity
+    for (let i = from; i < coords.length; i++) {
+      const dy = coords[i][0] - loc[0]
+      const dx = (coords[i][1] - loc[1]) * Math.cos((loc[0] * Math.PI) / 180)
+      const d = dx * dx + dy * dy
+      if (d < bestD) {
+        bestD = d
+        best = i
+      }
+    }
+    return best
+  }
+
+  function parseSteps(route, coords) {
+    const out = []
+    let from = 0
+    ;(route.legs || []).forEach((leg) =>
+      (leg.steps || []).forEach((s) => {
+        if (!s.maneuver || !s.maneuver.location) return
+        const loc = [s.maneuver.location[1], s.maneuver.location[0]]
+        const idx = nearestIdx(coords, loc, from)
+        from = idx
+        out.push({ idx, ...describe(s) })
+      })
+    )
+    return out
+  }
+
+  /** يحسب طريقًا؛ يعيد {coords:[[lat,lng]], steps, distance, duration} أو يرمي خطأً */
   async function fetchRoute(from, to) {
     const ctrl = new AbortController()
     const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS)
     try {
-      const url = `${ROUTE_URL}/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson`
+      const url = `${ROUTE_URL}/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson&steps=true`
       const res = await fetch(url, { signal: ctrl.signal })
       if (!res.ok) throw new Error('http ' + res.status)
       const data = await res.json()
       const r = data && data.code === 'Ok' && data.routes && data.routes[0]
       if (!r || !r.geometry || r.geometry.coordinates.length < 2) throw new Error('no-route')
+      const coords = r.geometry.coordinates.map(([lng, lat]) => [lat, lng])
       return {
-        coords: r.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+        coords,
+        steps: parseSteps(r, coords),
         distance: r.distance,
         duration: r.duration,
       }
@@ -67,6 +153,7 @@
       window.__FOLLOW__.start({
         name: `🛣️ ${target.name}`,
         coordinates: route.coords,
+        steps: route.steps,
         reroute: { to },
       })
       toast(`🛣️ الطريق: ${Utils.formatDistance(route.distance)} · نحو ${fmtDuration(route.duration)}`)
@@ -83,5 +170,5 @@
   }
 
   if (btn) btn.addEventListener('click', routeToTarget)
-  window.__ROUTE__ = { fetch: fetchRoute }
+  window.__ROUTE__ = { fetch: fetchRoute, describe, parseSteps }
 })()

@@ -1803,3 +1803,15 @@ body {
 .nav-hud-x.hidden {
   display: none;
 }
+
+/* ═══════════ تعليمات الانعطاف ═══════════ */
+.follow-turn {
+  margin-top: 3px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fde68a;
+  line-height: 1.35;
+}
+.follow-turn.hidden {
+  display: none;
+}

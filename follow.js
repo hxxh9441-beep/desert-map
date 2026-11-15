@@ -14,18 +14,39 @@
   const statusEl = document.getElementById('followStatus')
   const iconEl = document.getElementById('followIcon')
   const revBtn = document.getElementById('followReverseBtn')
+  const turnEl = document.getElementById('followTurn')
+  const voiceBtn = document.getElementById('followVoiceBtn')
   const stopBtn = document.getElementById('followStopBtn')
 
   const MIN_OFF_M = 50 // حد الابتعاد الأدنى (يرتفع مع ضعف دقة GPS)
   const OFF_TICKS = 3 // ثوانٍ متتالية خارج المسار قبل التنبيه
   const REPEAT_MS = 30000 // إعادة التنبيه أثناء الابتعاد
   const ARRIVE_M = 30
+  const MIN_STEP_M = 30
   const REROUTE_TICKS = 5 // ثوانٍ خارج الطريق قبل إعادة الحساب (مسارات الطرق فقط)
   const REROUTE_COOLDOWN_MS = 20000
   const WINDOW_BACK = 5
   const WINDOW_FWD = 200
 
   const toast = (m) => window.showToast && window.showToast(m)
+
+  /* ---------- التعليمات الصوتية (اختيارية — تُكتم بزر 🔊) ---------- */
+  const VOICE_KEY = 'wild_voice'
+  let voiceOn = localStorage.getItem(VOICE_KEY) !== '0'
+  function say(text) {
+    if (!voiceOn || !('speechSynthesis' in window)) return
+    try {
+      const u = new SpeechSynthesisUtterance(text)
+      u.lang = 'ar-SA'
+      speechSynthesis.cancel()
+      speechSynthesis.speak(u)
+    } catch {}
+  }
+  function renderVoiceBtn() {
+    voiceBtn.textContent = voiceOn ? '🔊' : '🔇'
+    voiceBtn.classList.toggle('active', voiceOn)
+  }
+  const roundDist = (m) => (m < 100 ? Math.max(10, Math.round(m / 10) * 10) : Math.round(m / 50) * 50)
 
   const st = {
     track: null,
@@ -38,6 +59,7 @@
     off: false,
     lastAlert: 0,
     arrived: false,
+    steps: [],
     lastReroute: 0,
     rerouting: false,
     timer: null,
@@ -122,6 +144,7 @@
       const brg = Utils.bearing(p, r.point)
       iconEl.textContent = '⚠️'
       hud.classList.add('off')
+      turnEl.classList.add('hidden')
       statusEl.textContent = `خارج المسار ${Utils.formatDistance(r.dist)} — اتجه ${Math.round(brg)}° ${Utils.cardinalAr(brg)}`
       setLink(p, r.point)
       const now = Date.now()
@@ -139,11 +162,37 @@
       iconEl.textContent = '🧭'
       setLink(null)
       statusEl.textContent = `على المسار · المتبقي ${Utils.formatDistance(remaining)}`
+      updateTurn(st.total - remaining)
       if (remaining <= ARRIVE_M && !st.arrived && st.total > 100) {
         st.arrived = true
         Utils.notify([500, 150, 500], 660)
         toast('🏁 وصلت نهاية المسار')
       }
+    }
+  }
+
+  /* ---------- الانعطاف القادم ---------- */
+  function updateTurn(progress) {
+    if (!st.steps.length) {
+      turnEl.classList.add('hidden')
+      return
+    }
+    // أول خطوة قادمة (نتجاوز "ابدأ" وما مضى منها)
+    const s = st.steps.find((x) => x.kind !== 'depart' && x.dist - progress > -15)
+    if (!s) {
+      turnEl.classList.add('hidden')
+      return
+    }
+    const d = Math.max(0, s.dist - progress)
+    turnEl.textContent = `${s.icon} بعد ${Utils.formatDistance(d)}: ${s.text}`
+    turnEl.classList.remove('hidden')
+    if (d <= 60 && !s.near) {
+      s.near = s.far = true
+      say(s.kind === 'arrive' ? s.text : `الآن، ${s.text}`)
+      if (s.kind !== 'arrive') Utils.notify([150], 760)
+    } else if (d <= 350 && d > 60 && !s.far) {
+      s.far = true
+      say(`بعد ${roundDist(d)} متر، ${s.text}`)
     }
   }
 
@@ -158,6 +207,7 @@
       const r = await window.__ROUTE__.fetch(p, track.reroute.to)
       if (st.track !== track) return // أُنهيت الملاحة أثناء الحساب
       track.coordinates = r.coords
+      track.steps = r.steps
       build()
       toast('🔄 أُعيد حساب الطريق')
     } catch {
@@ -178,6 +228,13 @@
     st.off = false
     st.offTicks = 0
     st.arrived = false
+    st.steps = st.reversed ? [] : (st.track.steps || [])
+          .map((s) => ({ ...s, dist: st.cum[s.idx] || 0 }))
+          // تجاهل انعطافات أول 30م (أثر التقاط نقطة البداية على الطريق)
+          .filter((s) => s.kind === 'arrive' || s.kind === 'depart' || s.dist > MIN_STEP_M)
+    voiceBtn.classList.toggle('hidden', !st.steps.length)
+    turnEl.classList.add('hidden')
+    renderVoiceBtn()
     nameEl.textContent = `${st.reversed ? '↔ ' : ''}${st.track.name}`
     revBtn.classList.toggle('active', st.reversed)
     revBtn.classList.toggle('hidden', !!st.track.reroute) // عكس الاتجاه لا يناسب طرق السيارات
@@ -211,6 +268,9 @@
     st.route = null
     setLink(null)
     st.track = null
+    st.steps = []
+    turnEl.classList.add('hidden')
+    if ('speechSynthesis' in window) speechSynthesis.cancel()
     hud.classList.remove('open', 'off')
     if (showMsg) toast('تم إنهاء ملاحة المسار')
   }
@@ -222,6 +282,13 @@
     tick()
   })
   stopBtn.addEventListener('click', () => stop())
+  voiceBtn.addEventListener('click', () => {
+    voiceOn = !voiceOn
+    localStorage.setItem(VOICE_KEY, voiceOn ? '1' : '0')
+    if (!voiceOn && 'speechSynthesis' in window) speechSynthesis.cancel()
+    renderVoiceBtn()
+    toast(voiceOn ? '🔊 التعليمات الصوتية مفعّلة' : '🔇 تم كتم التعليمات الصوتية')
+  })
 
   window.__FOLLOW__ = { start, stop, nearestOnSegment }
 })()
