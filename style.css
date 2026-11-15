@@ -68,7 +68,10 @@ body {
 
 /* ---------- تحكم التكبير (أسفل اليسار، داكن) ---------- */
 .leaflet-bottom.leaflet-left {
-  margin: 0 0 19.5rem 0.75rem; /* يبتعد عن شريط الأدوات العمودي (3 أزرار) */
+  /* التكبير على اليمين بمحاذاة شريط الأدوات — لا يتداخل مهما زاد عدد الأزرار */
+  left: auto;
+  right: max(0.75rem, env(safe-area-inset-right));
+  margin: 0 0 max(6.25rem, calc(env(safe-area-inset-bottom) + 5.25rem)) 0;
 }
 .leaflet-control-zoom {
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
@@ -1637,7 +1640,7 @@ body {
     font-size: 20px;
   }
   .leaflet-bottom.leaflet-left {
-    margin: 0 0 5rem 0.75rem;
+    margin: 0 0 4.5rem 0;
   }
   .record-btn {
     min-height: 48px;
