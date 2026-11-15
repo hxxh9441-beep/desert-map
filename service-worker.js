@@ -6,7 +6,7 @@
    - البلاطات الخارجية: كاش أولاً + تحديث خلفي (حد 1500 بلاطة)
      (المناطق المعروضة سابقاً تبقى متاحة بدون اتصال)
    ═══════════════════════════════════════════════════════════════ */
-const VERSION = 'wildmap-v24'
+const VERSION = 'wildmap-v25'
 const CORE_CACHE = `${VERSION}-core`
 const TILE_CACHE = `${VERSION}-tiles`
 
@@ -28,6 +28,7 @@ const CORE_ASSETS = [
   './offline.js',
   './car.js',
   './follow.js',
+  './route.js',
   './desert_pois.json',
   './fonts/thmanyah-serif-regular.woff2',
   './fonts/thmanyah-serif-bold.woff2',

@@ -1790,3 +1790,16 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ═══════════ توجيه الطرق (زر 🛣️) ═══════════ */
+.route-btn.loading {
+  opacity: 0.5;
+  pointer-events: none;
+  animation: route-pulse 0.8s ease-in-out infinite;
+}
+@keyframes route-pulse {
+  50% { opacity: 0.9; }
+}
+.nav-hud-x.hidden {
+  display: none;
+}

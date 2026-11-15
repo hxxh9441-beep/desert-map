@@ -20,6 +20,8 @@
   const OFF_TICKS = 3 // ثوانٍ متتالية خارج المسار قبل التنبيه
   const REPEAT_MS = 30000 // إعادة التنبيه أثناء الابتعاد
   const ARRIVE_M = 30
+  const REROUTE_TICKS = 5 // ثوانٍ خارج الطريق قبل إعادة الحساب (مسارات الطرق فقط)
+  const REROUTE_COOLDOWN_MS = 20000
   const WINDOW_BACK = 5
   const WINDOW_FWD = 200
 
@@ -36,6 +38,8 @@
     off: false,
     lastAlert: 0,
     arrived: false,
+    lastReroute: 0,
+    rerouting: false,
     timer: null,
     route: null,
     link: null,
@@ -121,6 +125,7 @@
       statusEl.textContent = `خارج المسار ${Utils.formatDistance(r.dist)} — اتجه ${Math.round(brg)}° ${Utils.cardinalAr(brg)}`
       setLink(p, r.point)
       const now = Date.now()
+      if (st.track.reroute && st.offTicks >= REROUTE_TICKS) reroute(p)
       if (st.offTicks >= OFF_TICKS && (!st.off || now - st.lastAlert > REPEAT_MS)) {
         st.off = true
         st.lastAlert = now
@@ -142,6 +147,26 @@
     }
   }
 
+  /* ---------- إعادة حساب الطريق (فقط للمسارات التي لها هدف طريق) ---------- */
+  async function reroute(p) {
+    const now = Date.now()
+    if (st.rerouting || now - st.lastReroute < REROUTE_COOLDOWN_MS || !window.__ROUTE__) return
+    st.rerouting = true
+    st.lastReroute = now
+    const track = st.track
+    try {
+      const r = await window.__ROUTE__.fetch(p, track.reroute.to)
+      if (st.track !== track) return // أُنهيت الملاحة أثناء الحساب
+      track.coordinates = r.coords
+      build()
+      toast('🔄 أُعيد حساب الطريق')
+    } catch {
+      // بدون إنترنت: نكتفي بتنبيه الابتعاد
+    } finally {
+      st.rerouting = false
+    }
+  }
+
   /* ---------- بدء/إيقاف ---------- */
   function build() {
     const base = st.track.coordinates
@@ -155,6 +180,7 @@
     st.arrived = false
     nameEl.textContent = `${st.reversed ? '↔ ' : ''}${st.track.name}`
     revBtn.classList.toggle('active', st.reversed)
+    revBtn.classList.toggle('hidden', !!st.track.reroute) // عكس الاتجاه لا يناسب طرق السيارات
     drawRoute()
     setLink(null)
   }
@@ -169,6 +195,7 @@
     if (window.__NAV__ && window.__NAV__.clearTarget) window.__NAV__.clearTarget(false)
     st.track = track
     st.reversed = false
+    st.lastReroute = 0
     build()
     map.fitBounds(st.route.getBounds(), { padding: [48, 48] })
     hud.classList.add('open')

@@ -131,6 +131,7 @@
             <span id="targetBearing" class="nav-hud-brg"></span>
           </p>
         </div>
+        <button id="routeBtn" class="nav-hud-x route-btn" type="button" aria-label="احسب طريق سيارة (داخل المدن)" title="طريق سيارة — داخل المدن">🛣️</button>
         <button
           id="clearTargetBtn"
           class="nav-hud-x"
@@ -432,6 +433,8 @@
     <script src="car.js"></script>
     <!-- ملاحة المسار المحفوظ + تنبيه الابتعاد -->
     <script src="follow.js"></script>
+    <!-- توجيه الطرق داخل المدن (اختياري) -->
+    <script src="route.js"></script>
     <!-- تسجيل عامل الخدمة (الأوفلاين) -->
     <script>
       if ('serviceWorker' in navigator) {
