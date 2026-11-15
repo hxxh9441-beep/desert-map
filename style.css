@@ -1818,3 +1818,32 @@ body {
 .follow-turn.hidden {
   display: none;
 }
+
+/* ═══════════ وضع القيادة: حالة زر 🎯 ═══════════ */
+#locateBtn.follow-on {
+  border-color: rgba(34, 211, 238, 0.75);
+  box-shadow:
+    0 0 0 2px rgba(34, 211, 238, 0.25),
+    0 10px 28px rgba(0, 0, 0, 0.5);
+}
+#locateBtn.attention {
+  border-color: rgba(251, 191, 36, 0.8);
+  animation: locate-attn 1.4s ease-in-out infinite;
+}
+@keyframes locate-attn {
+  50% { box-shadow: 0 0 0 6px rgba(251, 191, 36, 0.25), 0 10px 28px rgba(0, 0, 0, 0.5); }
+}
+
+/* ═══════════ مؤشر دقة GPS ═══════════ */
+.gps-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-inline-start: 3px;
+  border-radius: 9999px;
+  background: #64748b;
+  vertical-align: middle;
+}
+.gps-dot.good { background: #22c55e; box-shadow: 0 0 6px rgba(34, 197, 94, 0.7); }
+.gps-dot.mid { background: #fbbf24; box-shadow: 0 0 6px rgba(251, 191, 36, 0.6); }
+.gps-dot.bad { background: #ef4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.6); }

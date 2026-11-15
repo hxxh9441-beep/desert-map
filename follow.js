@@ -33,11 +33,27 @@
   /* ---------- التعليمات الصوتية (اختيارية — تُكتم بزر 🔊) ---------- */
   const VOICE_KEY = 'wild_voice'
   let voiceOn = localStorage.getItem(VOICE_KEY) !== '0'
+  /** أول صوت عربي مثبّت في الجهاز (Chrome غالبًا بلا صوت عربي → نكتفي بالنص) */
+  function arabicVoice() {
+    if (!('speechSynthesis' in window)) return null
+    try {
+      return speechSynthesis.getVoices().find((v) => /^ar([-_]|$)/i.test(v.lang)) || null
+    } catch {
+      return null
+    }
+  }
+  function updateVoiceUi() {
+    // الزر يظهر فقط لمسار فيه تعليمات وكان في الجهاز صوت عربي
+    voiceBtn.classList.toggle('hidden', !(st.steps.length && arabicVoice()))
+  }
+  if ('speechSynthesis' in window) speechSynthesis.addEventListener('voiceschanged', updateVoiceUi)
   function say(text) {
-    if (!voiceOn || !('speechSynthesis' in window)) return
+    const voice = arabicVoice()
+    if (!voiceOn || !voice) return
     try {
       const u = new SpeechSynthesisUtterance(text)
-      u.lang = 'ar-SA'
+      u.voice = voice
+      u.lang = voice.lang
       speechSynthesis.cancel()
       speechSynthesis.speak(u)
     } catch {}
@@ -60,6 +76,8 @@
     lastAlert: 0,
     arrived: false,
     steps: [],
+    prevLayer: null,
+    layerSwitched: false,
     lastReroute: 0,
     rerouting: false,
     timer: null,
@@ -232,7 +250,7 @@
           .map((s) => ({ ...s, dist: st.cum[s.idx] || 0 }))
           // تجاهل انعطافات أول 30م (أثر التقاط نقطة البداية على الطريق)
           .filter((s) => s.kind === 'arrive' || s.kind === 'depart' || s.dist > MIN_STEP_M)
-    voiceBtn.classList.toggle('hidden', !st.steps.length)
+    updateVoiceUi()
     turnEl.classList.add('hidden')
     renderVoiceBtn()
     nameEl.textContent = `${st.reversed ? '↔ ' : ''}${st.track.name}`
@@ -252,6 +270,14 @@
     if (window.__NAV__ && window.__NAV__.clearTarget) window.__NAV__.clearTarget(false)
     st.track = track
     st.reversed = false
+    // مسار طرق (مدينة): خريطة الشوارع أوضح وبلاطاتها تصل لزوم 19 — نعيد الطبقة بعد الإنهاء
+    const BL = window.__BASELAYER__
+    if (track.reroute && BL && BL.get() !== 'streets') {
+      st.prevLayer = BL.get()
+      BL.set('streets')
+      st.layerSwitched = true
+      toast('🏙️ خريطة الشوارع أثناء التوجيه — يمكنك تغييرها من الطبقات')
+    }
     st.lastReroute = 0
     build()
     map.fitBounds(st.route.getBounds(), { padding: [48, 48] })
@@ -259,6 +285,15 @@
     tick()
     st.timer = setInterval(tick, 1000)
     toast('🧭 بدأت ملاحة المسار — سأنبهك إذا ابتعدت')
+    // الأصوات تُحمَّل متأخرة: نفحص بعد لحظة وننبّه مرة واحدة إن لم يوجد صوت عربي
+    if (st.steps.length && !sessionStorage.getItem('wild_novoice')) {
+      setTimeout(() => {
+        if (st.track && !arabicVoice()) {
+          sessionStorage.setItem('wild_novoice', '1')
+          toast('ℹ️ لا يوجد صوت عربي في جهازك — التعليمات نصية فقط')
+        }
+      }, 2500)
+    }
   }
 
   function stop(showMsg = true) {
@@ -269,6 +304,10 @@
     setLink(null)
     st.track = null
     st.steps = []
+    const BL = window.__BASELAYER__
+    if (st.layerSwitched && BL && BL.get() === 'streets' && st.prevLayer) BL.set(st.prevLayer)
+    st.layerSwitched = false
+    st.prevLayer = null
     turnEl.classList.add('hidden')
     if ('speechSynthesis' in window) speechSynthesis.cancel()
     hud.classList.remove('open', 'off')
@@ -290,5 +329,12 @@
     toast(voiceOn ? '🔊 التعليمات الصوتية مفعّلة' : '🔇 تم كتم التعليمات الصوتية')
   })
 
-  window.__FOLLOW__ = { start, stop, nearestOnSegment }
+  window.__FOLLOW__ = {
+    start,
+    stop,
+    nearestOnSegment,
+    get active() {
+      return !!st.track
+    },
+  }
 })()

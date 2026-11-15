@@ -196,6 +196,7 @@
 
   // الانتقال لمكان + ماركر مؤقت + بطاقة ثابتة (لا تدور مع الخريطة)
   function flyToPlace(lat, lng, name, zoom) {
+    if (window.__DRIVE__) window.__DRIVE__.pause() // البحث يحرّك الخريطة بعيدًا — أوقف التتبع
     map.setView([lat, lng], Math.max(map.getZoom(), zoom || 16))
     dropTempMarker(lat, lng)
     if (window.__PIN_SHEET__) {

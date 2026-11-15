@@ -90,7 +90,7 @@
     >
       <div class="pointer-events-auto hud-grid">
         <div class="hud-card">
-          <span class="hud-label">السرعة</span>
+          <span class="hud-label">السرعة <span id="gpsDot" class="gps-dot" title="دقة GPS" aria-label="دقة GPS"></span></span>
           <span id="hudSpeed" class="hud-value hud-speed">0</span>
           <span class="hud-unit">كم/س</span>
         </div>
@@ -437,6 +437,8 @@
     <script src="follow.js"></script>
     <!-- توجيه الطرق داخل المدن (اختياري) -->
     <script src="route.js"></script>
+    <!-- وضع القيادة: تتبع المؤشر + زوم تلقائي -->
+    <script src="drive.js"></script>
     <!-- تسجيل عامل الخدمة (الأوفلاين) -->
     <script>
       if ('serviceWorker' in navigator) {

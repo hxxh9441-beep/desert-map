@@ -111,6 +111,16 @@
     })
   }
 
+  // واجهة للتحكم بالطبقة من ملفات أخرى (مثل التبديل التلقائي لخريطة الشوارع أثناء التوجيه)
+  window.__BASELAYER__ = {
+    get: () => (document.querySelector('input[name="baseLayer"]:checked') || {}).value,
+    set: (name) => {
+      const r = [...radios].find((x) => x.value === name)
+      if (r) r.checked = true
+      switchLayer(name)
+    },
+  }
+
   function setPanel(open) {
     layerPanel.classList.toggle('open', open)
     layersBtn.setAttribute('aria-expanded', String(open))
