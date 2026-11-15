@@ -1740,3 +1740,53 @@ body {
     min-width: 0;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   المرحلة 4 — تحسينات الجمال
+   ═══════════════════════════════════════════════════════════════ */
+
+/* لوحة المسارات: عرض أريح، اسم المسار بسطر كامل والأزرار أسفله */
+#tracksPanel {
+  width: min(21rem, calc(100vw - 6rem));
+}
+#tracksPanel > div:first-child {
+  gap: 8px;
+}
+.track-item {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+.track-item > div:first-child {
+  flex: 1 1 100%;
+}
+.track-item > div:last-child {
+  flex: 1 1 100%;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.track-item .track-action {
+  flex: 1 1 0;
+  width: auto;
+  max-width: 64px;
+}
+
+/* بطاقة النقطة أكثر عتمة فلا تظهر الأزرار من خلفها */
+.pin-sheet {
+  background: rgba(13, 21, 38, 0.97);
+}
+
+/* الإشعار يعلو بطاقة النقطة */
+.toast {
+  bottom: max(9rem, calc(env(safe-area-inset-bottom) + 8rem));
+}
+
+/* حركة أقل لمن يفضّل ذلك */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
