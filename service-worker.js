@@ -6,7 +6,7 @@
    - البلاطات الخارجية: كاش أولاً + تحديث خلفي (حد 1500 بلاطة)
      (المناطق المعروضة سابقاً تبقى متاحة بدون اتصال)
    ═══════════════════════════════════════════════════════════════ */
-const VERSION = 'wildmap-v23'
+const VERSION = 'wildmap-v24'
 const CORE_CACHE = `${VERSION}-core`
 const TILE_CACHE = `${VERSION}-tiles`
 
