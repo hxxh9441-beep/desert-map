@@ -57,6 +57,7 @@
           keepBuffer: 3,
           detectRetina: false,
           opacity: 0.95,
+          className: 'map-labels', // تُخفى عند تدوير الخريطة (الأسماء مطبوخة في البلاطات)
           attribution: 'Labels © Esri',
         }
       ),
@@ -94,7 +95,7 @@
       ),
       L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
-        { maxNativeZoom: 16, maxZoom: MAX_ZOOM, keepBuffer: 3, attribution: 'Labels © Esri' }
+        { maxNativeZoom: 16, maxZoom: MAX_ZOOM, keepBuffer: 3, className: 'map-labels', attribution: 'Labels © Esri' }
       ),
     ]),
   }

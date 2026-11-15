@@ -44,6 +44,8 @@
     if (compassNeedle) compassNeedle.style.transform = `rotate(${deg}deg)`
     // القصور الذاتي يُفعَّل فقط في وضع الشمال (زاوية ≈ 0)
     const r = ((deg % 360) + 360) % 360
+    // أسماء البلاطات الجاهزة تدور مع الخريطة فتنقلب: نخفيها عند الدوران الواضح
+    document.body.classList.toggle('map-rotated', r > 20 && r < 340)
     const wantInertia = Math.abs(r) < 0.5
     if (map.options.inertia !== wantInertia) map.options.inertia = wantInertia
     // عند تجاوز عتبة الدوران: نحمّل هامش البلاطات (مرة واحدة)

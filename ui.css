@@ -505,8 +505,9 @@ body {
   place-items: center;
   color: var(--text-2);
 }
+/* مسافة 8px فقط بين كبسولة البحث وشريط العدّادات */
 .hud-top {
-  top: calc(var(--safe-t) + 80px);
+  top: calc(var(--safe-t) + 72px);
 }
 
 /* ───────── المجموعة الزجاجية الجانبية (مثل Apple Maps) ───────── */
@@ -1178,4 +1179,12 @@ body:has(#targetHud.open) {
 }
 .modal-input {
   min-height: var(--hit);
+}
+
+/* ───────── أسماء البلاطات: تُخفى عند تدوير الخريطة (تنقلب مع الدوران) ───────── */
+.leaflet-container .map-labels {
+  transition: opacity var(--dur) var(--ease);
+}
+body.map-rotated .leaflet-container .map-labels {
+  opacity: 0 !important;
 }
